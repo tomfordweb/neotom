@@ -46,13 +46,19 @@ autocmd('LspAttach', {
     vim.keymap.set("n", "gd", function() vim.lsp.buf.definition() end, { buffer = e.buf, desc = "Go to definition" })
     vim.keymap.set("n", "K", function() vim.lsp.buf.hover() end, { buffer = e.buf, desc = "Hover documentation" })
     vim.keymap.set("n", "<leader>ca", function() vim.lsp.buf.code_action() end, { buffer = e.buf, desc = "Code action" })
-    vim.keymap.set("n", "<leader>cA", function() vim.cmd(':LspTypescriptSourceAction') end, { buffer = e.buf, desc = "Typescript language server code actions" })
+    vim.keymap.set("n", "<leader>cA", function() vim.cmd(':LspTypescriptSourceAction') end,
+      { buffer = e.buf, desc = "Typescript language server code actions" })
     vim.keymap.set("n", "gr", function() vim.lsp.buf.references() end, { buffer = e.buf, desc = "Go to references" })
     vim.keymap.set("n", "<leader>cr", function() vim.lsp.buf.rename() end, { buffer = e.buf, desc = "Rename" })
     vim.keymap.set("n", "[j", function() vim.diagnostic.goto_next() end,
       { buffer = e.buf, desc = "Go to next diagnostic" })
     vim.keymap.set("n", "]k", function() vim.diagnostic.goto_prev() end,
       { buffer = e.buf, desc = "Go to previous diagnostic" })
+    -- this sucks but i am having trouble integrating.
+    vim.keymap.set('n', "gp", function()
+      vim.cmd('!prettier --write %')
+      vim.cmd('silent! checktime')
+    end, { buffer = e.buf, desc = "Prettier format file" });
 
     -- Format on save
     local client = assert(vim.lsp.get_client_by_id(e.data.client_id))

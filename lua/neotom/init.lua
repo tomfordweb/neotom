@@ -1,7 +1,7 @@
-require("tomfordweb.remap");
-require("tomfordweb.options")
-require("tomfordweb.lazy");
-require("tomfordweb.autocommands");
+require("neotom.remap");
+require("neotom.options")
+require("neotom.lazy");
+require("neotom.autocommands");
 
 
 function SetColors(color)

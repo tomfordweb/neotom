@@ -45,7 +45,7 @@ return {
 
     vim.keymap.set('n', '<leader>ff', function() builtin.find_files(require('telescope.themes').get_ivy({})) end,
       { desc = ':Telescope find_files' })
-    require("tomfordweb.telescope.multigrep").setup()
+    require("neotom.telescope.multigrep").setup()
     vim.keymap.set('n', '<leader>fn', function()
       builtin.find_files {
         cwd = vim.fn.stdpath('config')

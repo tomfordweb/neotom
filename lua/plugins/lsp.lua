@@ -5,6 +5,7 @@ return {
     "stevearc/conform.nvim",
     -- management
     "williamboman/mason.nvim",
+    "MunifTanjim/prettier.nvim",
     "williamboman/mason-lspconfig.nvim",
     "mason-org/mason-lspconfig.nvim",
     -- autocompleteion

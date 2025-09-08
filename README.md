@@ -1,4 +1,3 @@
-# neotom
 ```
                   ___________                         
   ____   ____  ___\__    ___/___   _____              
@@ -7,6 +6,8 @@
 |___|  /\___  >____/|____| \____/|__|_|  /            
      \/     \/                         \/             
 ```
+
+This is my editor. I have spent many hours customizing it to my needs. Use it to be better. 
 
 Features:
 
