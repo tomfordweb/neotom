@@ -19,13 +19,24 @@ return {
       "L3MON4D3/LuaSnip",
       version = "v2.*", -- Replace <CurrentMajor> by the latest released major (first number of latest release)
       build = "make install_jsregexp",
+      dependencies = { "rafamadriz/friendly-snippets", "saadparwaiz1/cmp_luasnip" },
+
+
       config = function()
+        local ls = require("luasnip")
         require("luasnip.loaders.from_vscode").lazy_load() -- load vscode style snippets from installed plugins
-        require("luasnip").config.set_config {
+        require("luasnip.loaders.from_lua").load({ paths = { vim.fn.stdpath("config") .. "/lua/snippets" } })
+        ls.config.set_config {
           history = true,
           updateevents = "TextChanged,TextChangedI",
+          enable_autosnippets = true,
         }
-      end,
+
+
+
+        vim.keymap.set("n", "<leader>rs", "<cmd>source ~/.config/nvim/lua/plugins/luasnip.lua<CR>",
+          { desc = "Reload Luasnip config" })
+      end
     },
     -- github copilot
     {
@@ -61,6 +72,7 @@ return {
       }
     })
     local cmp = require('cmp')
+    local ls = require("luasnip")
     local cmp_lsp = require("cmp_nvim_lsp")
     local capabilities = vim.tbl_deep_extend("force",
       {},
@@ -117,8 +129,12 @@ return {
     cmp.setup({
       snippet = {
         expand = function(args)
-          require('luasnip').lsp_expand(args.body) -- For `luasnip` users.
+          ls.lsp_expand(args.body) -- For `luasnip` users.
         end,
+      },
+      window = {
+        completion = cmp.config.window.bordered(),
+        documentation = cmp.config.window.bordered(),
       },
       completion = {
         completeopt = 'menu,menuone,noinsert'
@@ -134,13 +150,12 @@ return {
         -- Set `select` to `false` to only confirm explicitly selected items.
         ["<CR>"] = cmp.mapping.confirm { select = false },
         ["<C-j>"] = cmp.mapping(function(fallback)
-          local luasnip = require("luasnip")
           if cmp.visible() then
             cmp.select_next_item({ behavior = cmp.SelectBehavior.Select })
-          elseif luasnip.expandable() then
-            luasnip.expand()
-          elseif luasnip.expand_or_jumpable() then
-            luasnip.expand_or_jump()
+          elseif ls.expandable() then
+            ls.expand()
+          elseif ls.expand_or_jumpable() then
+            ls.expand_or_jump()
           else
             fallback()
           end
@@ -148,12 +163,18 @@ return {
           "i",
           "s",
         }),
+        ["<C-l>"] = cmp.mapping(function(fallback)
+          if ls.choice_active() then
+            ls.change_choice(1)
+          else
+            fallback()
+          end
+        end, { "i", "s" }),
         ["<C-k>"] = cmp.mapping(function(fallback)
-          local luasnip = require("luasnip")
           if cmp.visible() then
             cmp.select_prev_item()
-          elseif luasnip.jumpable(-1) then
-            luasnip.jump(-1)
+          elseif ls.jumpable(-1) then
+            ls.jump(-1)
           else
             fallback()
           end
@@ -163,7 +184,8 @@ return {
         }),
       }),
       sources = cmp.config.sources({
-        { name = "copilot",   group_index = 2 },
+        { name = "luasnip" },
+        { name = "copilot" },
         { name = 'nvim_lsp' },
         { name = "async_path" },
         { name = "nvim_lua" },
