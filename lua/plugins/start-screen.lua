@@ -13,6 +13,13 @@ return {
   config = function()
     local startify = require("alpha.themes.startify")
     local ascii = require("ascii")
+    function mergeTables(destinationTable, sourceTable)
+      for i = 1, #sourceTable do
+        table.insert(destinationTable, sourceTable[i])
+      end
+      return destinationTable
+    end
+
     -- available: devicons, mini, default is mini
     -- if provider not loaded and enabled is true, it will try to use another provider
     startify.file_icons.provider = "devicons"
@@ -62,18 +69,18 @@ return {
     --   [[                                                                    ]],
     --   [[                                                                    ]],
     --   [[                                                                    ]],
-    --   [[                                ___________                         ]],
-    --   [[                ____   ____  ___\__    ___/___   _____              ]],
-    --   [[               /    \_/ __ \/  _ \|    | /  _ \ /     \             ]],
-    --   [[              |   |  \  ___(  <_> )    |(  <_> )  Y Y  \            ]],
-    --   [[              |___|  /\___  >____/|____| \____/|__|_|  /            ]],
-    --   [[                   \/     \/                         \/             ]],
-    --   [[                                                                    ]],
-    --   [[                                                                    ]],
-    --   [[                                                                    ]],
-    --   ascii.get_random_global(),
-    -- }
-    startify.section.header.val = ascii.get_random_global()
+    neotom = {
+      [[                                ___________                         ]],
+      [[                ____   ____  ___\__    ___/___   _____              ]],
+      [[               /    \_/ __ \/  _ \|    | /  _ \ /     \             ]],
+      [[              |   |  \  ___(  <_> )    |(  <_> )  y y  \            ]],
+      [[              |___|  /\___  >____/|____| \____/|__|_|  /            ]],
+      [[                   \/     \/                         \/             ]],
+      [[                                                                    ]],
+      [[                                                                    ]],
+      [[                                                                    ]],
+    }
+    startify.section.header.val = mergeTables(ascii.get_random_global(), neotom)
     require("alpha").setup(
       startify.config
     )

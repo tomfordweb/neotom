@@ -29,10 +29,14 @@ return {
           -- the default case_mode is "smart_case"
         },
         mappings = {
-          n = { ["q"] = require("telescope.actions").close },
+          n = { ["q"] = require("telescope.actions").close,
+
+            ["<C-q>"] = actions.send_to_qflist + actions.open_qflist,
+          },
           i = {
             ["<Down>"] = actions.move_selection_next,
             ["<Up>"] = actions.move_selection_previous,
+            ["<C-q>"] = actions.send_to_qflist + actions.open_qflist,
             ["<C-j>"] = actions.move_selection_next,
             ["<C-k>"] = actions.move_selection_previous,
             ["<C-d>"] = actions.delete_buffer + actions.move_to_top

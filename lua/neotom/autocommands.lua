@@ -45,9 +45,15 @@ autocmd('LspAttach', {
   callback = function(e)
     vim.keymap.set("n", "gd", function() vim.lsp.buf.definition() end, { buffer = e.buf, desc = "Go to definition" })
     vim.keymap.set("n", "K", function() vim.lsp.buf.hover() end, { buffer = e.buf, desc = "Hover documentation" })
-    vim.keymap.set("n", "<leader>ca", function() vim.lsp.buf.code_action() end, { buffer = e.buf, desc = "Code action" })
-    vim.keymap.set("n", "<leader>cA", function() vim.cmd(':LspTypescriptSourceAction') end,
-      { buffer = e.buf, desc = "Typescript language server code actions" })
+    vim.keymap.set("n", "<leader>ca", function()
+      require('fidget').notify(vim.bo.filetype);
+      -- honestly it would be cool to merge these but idk how.
+      if (vim.bo.filetype == "typescript" or vim.bo.filetype == "typescriptreact") then
+        vim.cmd(':LspTypescriptSourceAction')
+      else
+        vim.lsp.buf.code_action()
+      end
+    end, { buffer = e.buf, desc = "Code action" })
     vim.keymap.set("n", "gr", function() vim.lsp.buf.references() end, { buffer = e.buf, desc = "Go to references" })
     vim.keymap.set("n", "<leader>cr", function() vim.lsp.buf.rename() end, { buffer = e.buf, desc = "Rename" })
     vim.keymap.set("n", "[j", function() vim.diagnostic.goto_next() end,
