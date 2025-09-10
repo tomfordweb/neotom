@@ -1,0 +1,5 @@
+describe("foo", function()
+  it("bar", function()
+    assert.are.equal(1, 1)
+  end)
+end)

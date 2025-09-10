@@ -71,4 +71,6 @@ end
 -- if you only want these mappings for toggle term use term://*toggleterm#* instead
 vim.cmd('autocmd! TermOpen term://* lua set_terminal_keymaps()')
 
--- get the keymap to reload my nvim config
+-- plenary
+vim.keymap.set('n', '<leader>p',
+  ":PlenaryBustedDirectory ./ {minimal_init = './tests/minimal_init.lua'}<CR>")
