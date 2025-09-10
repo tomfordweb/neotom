@@ -197,6 +197,7 @@ return {
     })
 
     vim.diagnostic.config({
+      -- underline = false,
       signs = {
         severity = {
           min = vim.diagnostic.severity.INFO,
@@ -209,9 +210,9 @@ return {
           [vim.diagnostic.severity.INFO] = '',
           [vim.diagnostic.severity.HINT] = '󰌵',
         },
-        linehl = {
-          [vim.diagnostic.severity.ERROR] = 'ErrorMsg',
-        },
+        -- linehl = {
+        --   [vim.diagnostic.severity.ERROR] = 'ErrorMsg',
+        -- },
         numhl = {
           [vim.diagnostic.severity.WARN] = 'WarningMsg',
         },

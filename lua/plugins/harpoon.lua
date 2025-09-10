@@ -26,7 +26,7 @@ return {
     harpoon:setup()
     -- REQUIRED
 
-    vim.keymap.set("n", "<leader>a", function()
+    vim.keymap.set("n", "<leader>ha", function()
       harpoon:list():add()
       local fileName = vim.fn.expand('%');
       fidget.notify(string.format("󰛢 %s", vim.fn.expand('%')), "info", { group = "harpoon" })

@@ -13,7 +13,7 @@ return {
   config = function()
     local startify = require("alpha.themes.startify")
     local ascii = require("ascii")
-    function mergeTables(destinationTable, sourceTable)
+    local function mergeTables(destinationTable, sourceTable)
       for i = 1, #sourceTable do
         table.insert(destinationTable, sourceTable[i])
       end
@@ -69,20 +69,22 @@ return {
     --   [[                                                                    ]],
     --   [[                                                                    ]],
     --   [[                                                                    ]],
-    neotom = {
-      [[                                ___________                         ]],
-      [[                ____   ____  ___\__    ___/___   _____              ]],
-      [[               /    \_/ __ \/  _ \|    | /  _ \ /     \             ]],
-      [[              |   |  \  ___(  <_> )    |(  <_> )  y y  \            ]],
-      [[              |___|  /\___  >____/|____| \____/|__|_|  /            ]],
-      [[                   \/     \/                         \/             ]],
-      [[                                                                    ]],
-      [[                                                                    ]],
-      [[                                                                    ]],
+    local neotom = {
+      [[                  ___________             ]],
+      [[  ____   ____  ___\__    ___/___   _____  ]],
+      [[ /    \_/ __ \/  _ \|    | /  _ \ /     \ ]],
+      [[|   |  \  ___(  <_> )    |(  <_> )  y y  \]],
+      [[|___|  /\___  >____/|____| \____/|__|_|  /]],
+      [[     \/     \/                         \/ ]],
+      [[                                          ]],
+      [[                                          ]],
+      [[                                          ]],
     }
     startify.section.header.val = mergeTables(ascii.get_random_global(), neotom)
     require("alpha").setup(
       startify.config
     )
+
+    vim.keymap.set("n", "<leader>a", function() vim.cmd(':Alpha') end, { desc = "Open Start Screen" })
   end,
 }
