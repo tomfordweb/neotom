@@ -30,7 +30,6 @@ return {
         },
         mappings = {
           n = { ["q"] = require("telescope.actions").close,
-
             ["<C-q>"] = actions.send_to_qflist + actions.open_qflist,
           },
           i = {
@@ -50,11 +49,24 @@ return {
     vim.keymap.set('n', '<leader>ff', function() builtin.find_files(require('telescope.themes').get_ivy({})) end,
       { desc = ':Telescope find_files' })
     require("neotom.telescope.multigrep").setup()
+    local gitlabTelescopes = require("neotom.telescope.gitlab")
+    gitlabTelescopes.setup({
+      GITLAB_PAT = os.getenv('GITLAB_ACCESS_TOKEN'),
+      GITLAB_URL = "https://gitlab.datacomp-intranet.com",
+    })
+
+    vim.keymap.set("n", "<leader>fm",
+      function() gitlabTelescopes.merge_requests(require("telescope.themes").get_ivy {}) end,
+      { desc = "Gitlab Merge Requests" })
+
+    vim.keymap.set("n", "<leader>rb", function() vim.cmd('source %') end, { desc = "Source File" })
+
     vim.keymap.set('n', '<leader>fn', function()
       builtin.find_files {
         cwd = vim.fn.stdpath('config')
       }
     end, { desc = "Telescope: nvim config files" })
+
     vim.keymap.set('n', '<leader>fp', function()
       builtin.find_files {
         cwd = vim.fs.joinpath(vim.fn.stdpath("data"), "lazy")
