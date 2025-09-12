@@ -3,7 +3,25 @@ return {
   branch = '0.1.x',
   dependencies = {
     'nvim-lua/plenary.nvim',
-    { 'nvim-telescope/telescope-fzf-native.nvim', build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release' }
+    { 'nvim-telescope/telescope-fzf-native.nvim', build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release' },
+    {
+      "kdheepak/lazygit.nvim",
+      lazy = false,
+      cmd = {
+        "LazyGit",
+        "LazyGitConfig",
+        "LazyGitCurrentFile",
+        "LazyGitFilter",
+        "LazyGitFilterCurrentFile",
+      },
+      -- optional for floating window border decoration
+      dependencies = {
+        "nvim-lua/plenary.nvim",
+      },
+      config = function()
+        require("telescope").load_extension("lazygit")
+      end,
+    },
   },
   config = function()
     local actions = require("telescope.actions")

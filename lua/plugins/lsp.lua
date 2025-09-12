@@ -2,10 +2,33 @@ return {
   "neovim/nvim-lspconfig",
   dependencies = {
     -- conform
-    "stevearc/conform.nvim",
+    {
+      "stevearc/conform.nvim",
+      config = function()
+        require("conform").setup({
+          formatters_by_ft = {
+            javascript = { "prettierd" },
+            typescript = { "prettierd" },
+            html = { "prettierd" },
+            css = { "prettierd" },
+            scss = { "prettierd" },
+            json = { "prettierd" },
+            yaml = { "prettierd" },
+            markdown = { "prettierd" },
+            htmlangular = { "prettierd" },
+            graphql = { "prettierd" },
+          },
+          format_on_save = {
+            -- These options will be passed to conform.format()
+            timeout_ms = 500,
+            lsp_format = "fallback",
+          },
+        })
+      end
+    },
+
     -- management
     "williamboman/mason.nvim",
-    "MunifTanjim/prettier.nvim",
     "williamboman/mason-lspconfig.nvim",
     "mason-org/mason-lspconfig.nvim",
     -- autocompleteion
@@ -67,10 +90,6 @@ return {
     },
   },
   config = function()
-    require("conform").setup({
-      formatters_by_ft = {
-      }
-    })
     local cmp = require('cmp')
     local ls = require("luasnip")
     local cmp_lsp = require("cmp_nvim_lsp")
