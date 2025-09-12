@@ -71,37 +71,5 @@ autocmd('LspAttach', {
       { buffer = e.buf, desc = "Go to next diagnostic" })
     vim.keymap.set("n", "]k", function() vim.diagnostic.goto_prev() end,
       { buffer = e.buf, desc = "Go to previous diagnostic" })
-
-    -- Format on save
-    local client = assert(vim.lsp.get_client_by_id(e.data.client_id))
-    if not client then return end
-
-    if client:supports_method('textDocument/formatting') then
-      vim.api.nvim_create_autocmd('BufWritePre', {
-        group = augroup('neotom.LspFormatOnSave', {}),
-        buffer = e.buf,
-        callback = function()
-          vim.lsp.buf.format({ bufnr = e.buf, id = client.id, timeout_ms = 1000 })
-        end,
-      })
-    end
-  end
-})
-
-autocmd('BufWritePre', {
-  group = augroup('neotom.LspPrettier', {}),
-  pattern = { "*.html", "*.css", "*.scss", "*.less", "*.js", "*.jsx", "*.ts", "*.tsx", "*.json", "*.yaml", "*.yml", "*.md", "*.graphql" },
-  callback = function()
-    local prettier_ft = {
-      "typescript", "typescriptreact",
-      "javascript", "javascriptreact",
-      "css", "scss", "less",
-      "html", "htmlangular",
-      "json", "yaml", "markdown", "graphql" }
-    if (containsValue(prettier_ft, vim.bo.filetype)) then
-      vim.cmd('%!npx prettier --stdin-filepath %')
-      fidget.notify(vim.bo.filetype .. " formatted with Prettier");
-    else
-    end
   end
 })
