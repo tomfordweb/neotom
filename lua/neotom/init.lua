@@ -2,6 +2,7 @@ require("neotom.remap");
 require("neotom.options")
 require("neotom.lazy");
 require("neotom.autocommands");
+require("neotom.lotto-text");
 
 
 function SetColors(color)
