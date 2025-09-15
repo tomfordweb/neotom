@@ -59,4 +59,6 @@ keymap("n", "<Leader>rr", ":source $MYVIMRC<CR>", { desc = "Reload Neovim config
 keymap("n", "<leader>tg", "<cmd>:LazyGit<CR>", { noremap = true, silent = true, desc = "Open LazyGit" })
 
 
--- get the keymap to reload my nvim config
+-- plenary
+vim.keymap.set('n', '<leader>p',
+  ":PlenaryBustedDirectory ./ {minimal_init = './tests/minimal_init.lua'}<CR>")
