@@ -62,17 +62,17 @@ return {
       end
     },
     -- github copilot
-    {
-      "github/copilot.vim",
-      config = function()
-        vim.g.copilot_no_tab_map = true
-        -- vim.g.copilot_workspace_folders = { "~/code" }
-        vim.keymap.set('i', '<C-Space>', 'copilot#Accept("\\<CR>")', {
-          expr = true,
-          replace_keycodes = false
-        })
-      end
-    },
+    -- {
+    --   "github/copilot.vim",
+    --   config = function()
+    --     vim.g.copilot_no_tab_map = true
+    --     -- vim.g.copilot_workspace_folders = { "~/code" }
+    --     vim.keymap.set('i', '<C-Space>', 'copilot#Accept("\\<CR>")', {
+    --       expr = true,
+    --       replace_keycodes = false
+    --     })
+    --   end
+    -- },
     -- this is basically vim lsp integration for lua
     {
       "folke/lazydev.nvim",
@@ -204,7 +204,7 @@ return {
       }),
       sources = cmp.config.sources({
         { name = "luasnip" },
-        { name = "copilot" },
+        -- { name = "copilot" },
         { name = 'nvim_lsp' },
         { name = "async_path" },
         { name = "nvim_lua" },

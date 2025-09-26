@@ -4,9 +4,9 @@ return {
   dependencies = {
     'nvim-lua/plenary.nvim',
     { 'nvim-telescope/telescope-fzf-native.nvim', build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release' },
-    {
-      dir = vim.fn.expand("$HOME") .. "/code/tomfordweb/telescope-gitlab",
-    },
+    -- {
+    --   dir = vim.fn.expand("$HOME") .. "/code/tomfordweb/telescope-gitlab",
+    -- },
     {
       "kdheepak/lazygit.nvim",
       lazy = false,
@@ -66,20 +66,22 @@ return {
     }
 
     require('telescope').load_extension('fzf');
+    require("neotom.telescope.multigrep").setup()
+
 
     vim.keymap.set('n', '<leader>ff', function() builtin.find_files(require('telescope.themes').get_ivy({})) end,
       { desc = ':Telescope find_files' })
 
-    local prManager = require('telescope-gitlab');
+    -- local prManager = require('telescope-gitlab');
+    --
+    -- prManager.setup({
+    --   GITLAB_PAT = os.getenv('GITLAB_ACCESS_TOKEN'),
+    --   GITLAB_URL = "https://gitlab.datacomp-intranet.com",
+    -- })
 
-    prManager.setup({
-      GITLAB_PAT = os.getenv('GITLAB_ACCESS_TOKEN'),
-      GITLAB_URL = "https://gitlab.datacomp-intranet.com",
-    })
-
-    vim.keymap.set("n", "<leader>fm",
-      function() prManager.merge_requests(require("telescope.themes").get_ivy {}) end,
-      { desc = "Gitlab Merge Requests" })
+    -- vim.keymap.set("n", "<leader>fm",
+    --   function() prManager.merge_requests(require("telescope.themes").get_ivy {}) end,
+    --   { desc = "Gitlab Merge Requests" })
 
     vim.keymap.set("n", "<leader>rb", function() vim.cmd('source %') end, { desc = "Source File" })
 

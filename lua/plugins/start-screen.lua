@@ -41,26 +41,29 @@ return {
 
     local lotto = require('neotom.lotto-text')
 
-    startify.section.header.val = lotto.merge_tables(lotto.getText({
-      { "write",  "develop", "make", "build",       "refactor", "test", "push" },
-      { "broken", "robust",  "cool", "well tested", "dubious",  "fast" },
-      { "tests",  "shit",    "apps", "pipelines" }
-    }, {
-      "standard",
-      "3-d",
-      "block",
-      "colossal",
-      "cosmic",
-      "doh",
-      "epic",
-      "hollywood",
-      "isometric1",
-      "poison",
-      "roman",
-      "Star Wars"
+    -- startify.section.header.val = lotto.merge_tables(lotto.getText({
+    --   { "write",  "develop", "make", "build",       "refactor", "test", "push" },
+    --   { "broken", "robust",  "cool", "well tested", "dubious",  "fast" },
+    --   { "tests",  "shit",    "apps", "pipelines" }
+    -- }, {
+    --   "standard",
+    --   "3-d",
+    --   "block",
+    --   "colossal",
+    --   "cosmic",
+    --   "doh",
+    --   "epic",
+    --   "hollywood",
+    --   "isometric1",
+    --   "poison",
+    --   "roman",
+    --   "Star Wars"
+    --
+    -- }), neotom);
 
-    }), neotom);
 
+    -- local result = vim.fn.system('npx -y git-stats -A')
+    -- startify.section.header.val = vim.split(result, '\n', { plain = true, trimempty = true })
     require("alpha").setup(
       startify.config
     )
