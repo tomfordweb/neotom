@@ -1,8 +1,5 @@
 return {
   "goolord/alpha-nvim",
-
-
-
   dependencies = { 'nvim-tree/nvim-web-devicons',
     {
       "MaximilianLloyd/ascii.nvim",
@@ -15,92 +12,32 @@ return {
   config = function()
     local startify = require("alpha.themes.startify")
 
-    require('neotom.lotto-text').setup();
-    -- available: devicons, mini, default is mini
-    -- if provider not loaded and enabled is true, it will try to use another provider
+    local function multi_line_text_to_table(result)
+      local pos, fonttbl = 0, {}
+      for st, sp in function() return string.find(result, "\n", pos, true) end do
+        table.insert(fonttbl, string.sub(result, pos, st - 1))
+        pos = sp + 1
+      end
+      table.insert(fonttbl, string.sub(result, pos))
+      return fonttbl
+    end
+
+    local function mergeTables(destinationTable, sourceTable)
+      for i = 1, #sourceTable do
+        table.insert(destinationTable, sourceTable[i])
+      end
+      return destinationTable
+    end
+
     startify.file_icons.provider = "devicons"
 
-
-    -- jp2a -i --chars="..00xx@@" ~/code/_testing-photos/nvim-small.png --size=50x25
-    startify.section.header.val = {
-      [[                                 000000000000000                              000000000                                       ]],
-      [[                                0@@@@@@@@@@@@@@00                             0@@@@@@@@00                                     ]],
-      [[                              00@@@@@@@@@00000@@00                            0@@@@@@@@@00                                    ]],
-      [[                            00@@@@@@@@@00    0@@@@0                           0@@@@@@@@@@@00                                  ]],
-      [[                            0@@@@@@@000      0@@@@@0                          0@@@@@@@@@@@@@00                                ]],
-      [[                        00   0@@@@@0   000  0@@@@@@@0                         0@@@@@@@@@@@@@@@00                              ]],
-      [[                       0@@00  00@@@0000@@0  0@@0000@@0                        0@@@@@@@@@@@@@@@@00                             ]],
-      [[                      0@@@@@0   0@@@@@@@@0  @00   0@@@00                      0@@@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@0   0@@@@@@@   0   00000@@00                     0@@@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@0   0@@@@@0    000     0@@@0                    0@@@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@0   0@@@@0  000   000  0@@@0                   0@@@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@00  0@@@@00   00  0@0  00@@0                  0@@@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@0  00@@@0   000  0@0   0@@0                 0@@@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@00  00@@@0   0@0  000  0@@@0                0@@@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@0   0@@@00  0@0  0000000@@00              0@@@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@0   0@@@00  0@0000     0@@00             0@@@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@0   0@@@@0  000   000  00@@0            0@@@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@00  0@@@@00   00@@@@0  00@@0           0@@@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@@00  0@@@@0   0@@@@@@0   0@@0          0@@@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@@@0   00@@@0   0@@@@00   00@@0         0@@@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@@@0     0@@@00  0000   000 0@@00       0@@@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@@@0      0@@@@0     00@@@0  0@@00      0@@@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@@@0       0@@@000000@@@@@@0  0@@00     0@@@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@@@0        0@@@@@@@@@@@@000   00@00    0@@@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@@@0         0@@@@@@@@000   00   0@00   0@@@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@@@0          00@@@@00   000@@0  00@@0   0@@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@@@0           0@@@@00 00@@@@@@00000@@0   0@@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@@@0            00@@@0@@@@@@@00     0@@0   0@@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@@@0             00@@@@@@@000   000  00@0   0@@@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@@@0               0@@@@@@   000@@@0  00@00  00@@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@@@0                0@@@@@   0@@@@@@0   0@00  00@@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@@@0                 0@@@@0   0@@@@00   0@@@0  00@@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@@@0                  0@@@@00  0000   00000@@0   0@@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@@@0                   00@@@00     000     0@@0   0@@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@@@0                    00@@@@000000   000  00@0   0@@@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@@@0                     00@@@@@0   00000    00@0   00@@@@@0                            ]],
-      [[                      0@@@@@@@@@@@@@@@@@@0                       0@@@@0 00@00   00   0@00  0@@@@@0                            ]],
-      [[                       0@@@@@@@@@@@@@@@@@0                        0@@@@@00   00000   0@@00  00@@00                            ]],
-      [[                        00@@@@@@@@@@@@@@@0                         0@@@@0  00@00   00@@@@@0   00                              ]],
-      [[                          00@@@@@@@@@@@@@0                          0@@@@0000   000@@@@@@@@0                                  ]],
-      [[                            0@@@@@@@@@@@@0                           0@@@@@0  00@@@@@@@@@@@0                                  ]],
-      [[                              0@@@@@@@@@@0                            00@@@@00@@@@@@@@@@@00                                   ]],
-      [[                               00@@@@@@@@0                              0@@@@@@@@@@@@@@00                                     ]],
-      [[                                 000000000                               00000000000000                                       ]],
-      [[                                                                                                                              ]],
-      "nvim Version " .. vim.version().major .. "." .. vim.version().minor .. "." .. vim.version().patch,
-      "neotom version " .. vim.fn.system("git rev-parse --short HEAD"):gsub("%s+$", ""),
-    }
-
-    startify.section.footer = {
-      val = "hello world"
-    };
-
-    local lotto = require('neotom.lotto-text')
-
-    -- startify.section.header.val = lotto.merge_tables(lotto.getText({
-    --   { "write",  "develop", "make", "build",       "refactor", "test", "push" },
-    --   { "broken", "robust",  "cool", "well tested", "dubious",  "fast" },
-    --   { "tests",  "shit",    "apps", "pipelines" }
-    -- }, {
-    --   "standard",
-    --   "3-d",
-    --   "block",
-    --   "colossal",
-    --   "cosmic",
-    --   "doh",
-    --   "epic",
-    --   "hollywood",
-    --   "isometric1",
-    --   "poison",
-    --   "roman",
-    --   "Star Wars"
-    --
-    -- }), neotom);
-
-
-    -- local result = vim.fn.system('npx -y git-stats -A')
-    -- startify.section.header.val = vim.split(result, '\n', { plain = true, trimempty = true })
+    startify.section.header.val = mergeTables(
+      multi_line_text_to_table(
+        vim.fn.system('jp2a  ~/.config/nvim/neotom.png --invert --width=100')
+      ), {
+        "nvim Version " .. vim.version().major .. "." .. vim.version().minor .. "." .. vim.version().patch,
+        "neotom version " .. vim.fn.system("git rev-parse --short HEAD"):gsub("%s+$", ""),
+      })
     require("alpha").setup(
       startify.config
     )
