@@ -42,6 +42,8 @@ keymap("v", "p", '"_dP', opts)
 -- Insert --
 -- Press jk fast to enter
 keymap("i", "jk", "<ESC>", opts)
+--  ;;  to go to end of the line.
+keymap("i", ";;", "<C-o>$", opts)
 
 -- Visual --
 -- Stay in indent mode
