@@ -156,7 +156,8 @@ return {
         documentation = cmp.config.window.bordered(),
       },
       completion = {
-        completeopt = 'menu,menuone,noinsert'
+        -- noselect - do not automatically select the first element
+        completeopt = 'menu,menuone,noinsert,noselect'
       },
       mapping = cmp.mapping.preset.insert({
         ["<C-f>"] = cmp.mapping(cmp.mapping.scroll_docs(-1), { "i", "c" }),
