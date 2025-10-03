@@ -54,11 +54,18 @@ keymap("v", ">", ">gv", opts)
 keymap('v', 'y', 'myy`y', opts)
 
 keymap("n", "<leader>e", "<CMD>Oil<CR>", { desc = "Open parent directory" })
+keymap("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
 --keymap("n", "<leader>E", require('oil').toggle_float() { desc = "Open parent directory" })
 
 keymap("n", "<Leader>rr", ":source $MYVIMRC<CR>", { desc = "Reload Neovim config" })
 
 keymap("n", "<leader>tg", "<cmd>:LazyGit<CR>", { noremap = true, silent = true, desc = "Open LazyGit" })
+
+-- disable touchpad mouse things.
+keymap("", "<up>", "<nop>", opts)
+keymap("", "<down>", "<nop>", opts)
+keymap("i", "<up>", "<nop>", opts)
+keymap("i", "<down>", "<nop>", opts)
 
 
 -- plenary

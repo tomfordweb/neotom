@@ -8,7 +8,8 @@ opt.conceallevel = 0                        -- so that `` is visible in markdown
 opt.fileencoding = "utf-8"                  -- the encoding written to a file
 opt.hlsearch = true                         -- highlight all matches on previous search pattern
 opt.ignorecase = true                       -- ignore case in search patterns
-opt.mouse = "a"                             -- allow the mouse to be used in neovim
+
+vim.opt.mouse = ""                          -- using a mouse makes you a 5x dev, be a 10x
 opt.pumheight = 10                          -- pop up menu height
 opt.showmode = false                        -- we don't need to see things like -- INSERT -- anymore
 opt.showtabline = 0                         -- always show tabs
