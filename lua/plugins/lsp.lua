@@ -157,7 +157,7 @@ return {
       },
       completion = {
         -- noselect - do not automatically select the first element
-        completeopt = 'menu,menuone,noinsert,noselect'
+        completeopt = 'menu,menuone,noinsert'
       },
       mapping = cmp.mapping.preset.insert({
         ["<C-f>"] = cmp.mapping(cmp.mapping.scroll_docs(-1), { "i", "c" }),
