@@ -98,6 +98,10 @@ return {
       vim.lsp.protocol.make_client_capabilities(),
       cmp_lsp.default_capabilities())
 
+    -- disable cmp for markdown
+    require("cmp").setup.filetype('markdown', {
+      sources = {},
+    })
     require("fidget").setup({})
     require("mason").setup()
 
@@ -113,6 +117,7 @@ return {
         "docker_language_server",
         "emmet_ls",
         "eslint",
+        "oxlint",
         "gitlab_ci_ls",
         "graphql",
         "jsonls",
