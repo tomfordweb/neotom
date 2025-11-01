@@ -12,6 +12,7 @@ return {
 
     -- Required for `vim.g.opencode_opts.auto_reload`
     vim.opt.autoread = true
+    vim.g.opencode_opts.auto_reload = true
 
     -- Recommended/example keymaps
     vim.keymap.set({ "n", "x" }, "<leader>oa", function() require("opencode").ask("@this: ", { submit = true }) end,
