@@ -16,9 +16,9 @@ function SetColors(color)
   vim.api.nvim_set_hl(0, "NormalNC", { bg = "none" })
 
   -- Set the color for relative line numbers
-  vim.api.nvim_set_hl(0, 'LineNrAbove', { fg = '#94e2d5', bold = true })
-  vim.api.nvim_set_hl(0, 'LineNr', { fg = '#f5e0dc', bold = true })
-  vim.api.nvim_set_hl(0, 'LineNrBelow', { fg = '#b4befe', bold = true })
+  vim.api.nvim_set_hl(0, 'LineNrAbove', { fg = '#f9e2af', bold = true })
+  vim.api.nvim_set_hl(0, 'LineNr', { fg = '#f5c2e7', bold = true })
+  vim.api.nvim_set_hl(0, 'LineNrBelow', { fg = '#fab387', bold = true })
 end
 
 SetColors()
