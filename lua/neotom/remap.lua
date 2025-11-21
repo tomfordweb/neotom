@@ -61,12 +61,15 @@ keymap("n", "<Leader>rr", ":source $MYVIMRC<CR>", { desc = "Reload Neovim config
 
 keymap("n", "<leader>tg", "<cmd>:LazyGit<CR>", { noremap = true, silent = true, desc = "Open LazyGit" })
 
--- disable touchpad mouse things.
+-- disable touchpad mouse;
 keymap("", "<up>", "<nop>", opts)
 keymap("", "<down>", "<nop>", opts)
 keymap("i", "<up>", "<nop>", opts)
 keymap("i", "<down>", "<nop>", opts)
 
+
+-- close all buffers but this one.
+keymap("n", "<C-w>a", ":%bd|e#", { noremap = true, desc = "Close other buffers" })
 
 -- plenary
 vim.keymap.set('n', '<leader>p',
