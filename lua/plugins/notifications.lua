@@ -3,7 +3,7 @@ return {
   priority = 1000,
   lazy = false,
   opts = {
-    notifier = { enabled = true },     -- Ensure this is set to true
-    -- Other snacks.nvim options
+    terminal = { enabled = true },
+    notifier = { enabled = true },
   },
 }
