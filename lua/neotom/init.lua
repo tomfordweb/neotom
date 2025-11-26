@@ -15,6 +15,11 @@ function SetColors(color)
   vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
   vim.api.nvim_set_hl(0, "NormalNC", { bg = "none" })
 
+  -- find the active line
+  vim.api.nvim_set_hl(0, "CursorLine", {
+    bg = "#181825" -- catpuccin.mocha.mantle
+  });
+
   -- Set the color for relative line numbers
   vim.api.nvim_set_hl(0, 'LineNrAbove', { fg = '#f9e2af', bold = true })
   vim.api.nvim_set_hl(0, 'LineNr', { fg = '#f5c2e7', bold = true })

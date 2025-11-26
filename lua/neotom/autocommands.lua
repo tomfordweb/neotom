@@ -73,3 +73,19 @@ autocmd('LspAttach', {
       { buffer = e.buf, desc = "Go to previous diagnostic" })
   end
 })
+
+-- only do cursorline in active buffer
+-- not quite working yet..
+-- autocmd({ "WinEnter", "BufEnter", "BufWinEnter" }, {
+--   group = augroup("CursorLine", { clear = true }),
+--   callback = function()
+--     vim.opt_local.cursorline = true
+--   end,
+-- })
+--
+-- autocmd({ "WinLeave" }, {
+--   group = augroup("CursorLine", { clear = true }),
+--   callback = function()
+--     vim.opt_local.cursorline = false
+--   end,
+-- })
