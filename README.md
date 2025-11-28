@@ -1,33 +1,19 @@
 ```
-                  ___________                         
-  ____   ____  ___\__    ___/___   _____              
- /    \_/ __ \/  _ \|    | /  _ \ /     \             
-|   |  \  ___(  <_> )    |(  <_> )  Y Y  \            
-|___|  /\___  >____/|____| \____/|__|_|  /            
-     \/     \/                         \/             
+                  ___________
+  ____   ____  ___\__    ___/___   _____
+ /    \_/ __ \/  _ \|    | /  _ \ /     \
+|   |  \  ___(  <_> )    |(  <_> )  Y Y  \
+|___|  /\___  >____/|____| \____/|__|_|  /
+     \/     \/                         \/
 ```
 
-This is my editor. I have spent many hours customizing it to my needs. Use it to be better. 
+My neovim config.
 
-Features:
+# Dependencies
 
-1) A full development environment for: Javascript, Typescript, Bash, PHP, Python, Lua
-2) Full LSP support through neovim, mason, and mason-lspconfig. Including autocompletion, linting, formatting, and snippets.
-3) Luasnip integration
-4) Lazygit integration.
-3) copilot integration
-
-# Other dependencies
-
-Rust and Cargo must be installed and on path.
-
-### Github copilot 
-
-This must be done in order to get copilot working. You should only need to run this once.
-
-```
-:Copilot setup
-```
+- (lsp) Rust/Cargo
+- (lsp) Go
+- (start screen) `jp2a`
 
 # Icons
 
@@ -38,18 +24,5 @@ https://www.nerdfonts.com/cheat-sheet
 
 # Commands
 
-1: `:Lazy` - Opens up lazy.nvim which is the package manager I like.
-1: `:Mason` - LSP installer.
-
-* [Lazy](https://github.com/wbthomason/packer.nvim)
-* [Telescope](https://github.com/nvim-telescope/telescope.nvim)
-* [Treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
-
-
-# Credits
-
-Some of code taken from configs and lessons from:
-
-* [ThePrimeagen](https://www.youtube.com/@ThePrimeagen)
-* [TJ DeVries](https://www.youtube.com/@tjdevries)
-
+1: `:Lazy` - Update/view dependencies.
+2: `:Mason` - LSP installer.
