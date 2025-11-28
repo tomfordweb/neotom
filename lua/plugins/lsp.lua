@@ -107,13 +107,14 @@ return {
 
     require("mason-lspconfig").setup({
       ensure_installed = {
-        "angularls",    -- ng
-        "lua_ls",       -- lua
-        "intelephense", -- php
-        "ansiblels",    --ansible
-        "bashls",       --shell
-        "marksman",     --markdown
+        "angularls",
+        "lua_ls",
+        "intelephense",
+        "ansiblels",
+        "bashls",
+        "marksman",
         "docker_compose_language_service",
+        "hyprls",
         "docker_language_server",
         "emmet_ls",
         "eslint",
