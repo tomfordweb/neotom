@@ -33,7 +33,7 @@ return {
 
     startify.section.header.val = mergeTables(
       multi_line_text_to_table(
-        vim.fn.system('jp2a  ~/.config/nvim/neotom.png --invert --width=100')
+        vim.fn.system('jp2a  $XDG_CONFIG_HOME/nvim/neotom.png --invert --width=80')
       ), {
         "nvim Version " .. vim.version().major .. "." .. vim.version().minor .. "." .. vim.version().patch,
         "neotom version " .. vim.fn.system("git rev-parse --short HEAD"):gsub("%s+$", ""),
