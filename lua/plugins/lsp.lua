@@ -133,7 +133,7 @@ return {
           }
         end,
         ["python-lsp-server"] = function()
-          local lspconfig = require("lspconfig").pylsp.setup({
+          require("lspconfig").pylsp.setup({
             -- Customize pylsp options here if needed
             settings = {
               pylsp = {
@@ -148,7 +148,7 @@ return {
           })
         end,
         ["pyright"] = function()
-          local lspconfig = require("lspconfig").pyright.setup()
+          require("lspconfig").pyright.setup()
         end,
         ["lua_ls"] = function()
           local lspconfig = require("lspconfig")
