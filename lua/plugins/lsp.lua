@@ -17,6 +17,7 @@ return {
             markdown = { "prettierd" },
             htmlangular = { "prettierd" },
             graphql = { "prettierd" },
+            python = { "black" }
           },
           format_on_save = {
             -- These options will be passed to conform.format()
