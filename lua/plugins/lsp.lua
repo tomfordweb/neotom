@@ -108,8 +108,10 @@ return {
     require("mason-lspconfig").setup({
       ensure_installed = {
         "angularls",
+        "pyright",
         "lua_ls",
         "intelephense",
+        "python-lsp-server",
         "ansiblels",
         "bashls",
         "marksman",
@@ -129,6 +131,24 @@ return {
           require("lspconfig")[server_name].setup {
             capabilities = capabilities
           }
+        end,
+        ["python-lsp-server"] = function()
+          local lspconfig = require("lspconfig").pylsp.setup({
+            -- Customize pylsp options here if needed
+            settings = {
+              pylsp = {
+                plugins = {
+                  -- Enable/disable specific pylsp plugins
+                  pyflakes = { enabled = true },
+                  autopep8 = { enabled = true },
+                  -- ... other plugins
+                },
+              },
+            },
+          })
+        end,
+        ["pyright"] = function()
+          local lspconfig = require("lspconfig").pyright.setup()
         end,
         ["lua_ls"] = function()
           local lspconfig = require("lspconfig")
