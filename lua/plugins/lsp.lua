@@ -7,6 +7,8 @@ return {
       config = function()
         require("conform").setup({
           formatters_by_ft = {
+            sh = { "shfmt" },
+            bash = { "shfmt" },
             javascript = { "prettierd" },
             typescript = { "prettierd" },
             html = { "prettierd" },
