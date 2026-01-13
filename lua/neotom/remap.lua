@@ -1,4 +1,5 @@
 local keymap = vim.keymap.set
+local builtin = require('telescope.builtin')
 
 -- global keymap options
 local opts = { silent = true }
@@ -72,5 +73,38 @@ keymap("i", "<down>", "<nop>", opts)
 keymap("n", "<C-w>a", ":%bd|e#", { noremap = true, desc = "Close other buffers" })
 
 -- plenary
-vim.keymap.set('n', '<leader>p',
+keymap('n', '<leader>p',
   ":PlenaryBustedDirectory ./ {minimal_init = './tests/minimal_init.lua'}<CR>")
+
+vim.keymap.set('n', '<leader>f', function() builtin.find_files(require('telescope.themes').get_ivy({})) end,
+  { desc = ':Telescope find_files' })
+
+-- local prManager = require('telescope-gitlab');
+--
+-- prManager.setup({
+--   GITLAB_PAT = os.getenv('GITLAB_ACCESS_TOKEN'),
+--   GITLAB_URL = "https://gitlab.datacomp-intranet.com",
+-- })
+
+--keymap ("n", "<leader>fm",
+--   function() prManager.merge_requests(require("telescope.themes").get_ivy {}) end,
+--   { desc = "Gitlab Merge Requests" })
+
+keymap("n", "<leader>rb", function() vim.cmd('source %') end, { desc = "Source File" })
+
+keymap('n', '<leader>N', function()
+  builtin.find_files {
+    cwd = vim.fn.stdpath('config')
+  }
+end, { desc = "Telescope: nvim config files" })
+
+keymap('n', '<leader>P', function()
+  builtin.find_files {
+    cwd = vim.fs.joinpath(vim.fn.stdpath("data"), "lazy")
+  }
+end, { desc = "Telescope: plugin files" })
+
+keymap('n', '<leader>b', builtin.buffers, { desc = ':Telescope buffers' })
+keymap('n', '<leader>S', builtin.search_history, { desc = ':Telescope search_history' })
+keymap('n', '<leader>P', builtin.spell_suggest, { desc = ':Telescope spelling_suggest' })
+keymap('n', '<leader>H', builtin.help_tags, { desc = ':Telescope help_tags' })

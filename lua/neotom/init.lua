@@ -1,6 +1,6 @@
-require("neotom.remap");
 require("neotom.options")
 require("neotom.lazy");
+require("neotom.remap");
 require("neotom.autocommands");
 require("neotom.lotto-text");
 

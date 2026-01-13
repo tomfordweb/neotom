@@ -47,7 +47,7 @@ local live_multigrep = function(opts)
 end
 
 M.setup = function()
-  vim.keymap.set("n", "<leader>fg", function() live_multigrep(require("telescope.themes").get_ivy {}) end,
+  vim.keymap.set("n", "<leader>g", function() live_multigrep(require("telescope.themes").get_ivy {}) end,
     { desc = "Live Multi Grep" })
 end
 

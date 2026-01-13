@@ -67,38 +67,5 @@ return {
 
     require('telescope').load_extension('fzf');
     require("neotom.telescope.multigrep").setup()
-
-
-    vim.keymap.set('n', '<leader>ff', function() builtin.find_files(require('telescope.themes').get_ivy({})) end,
-      { desc = ':Telescope find_files' })
-
-    -- local prManager = require('telescope-gitlab');
-    --
-    -- prManager.setup({
-    --   GITLAB_PAT = os.getenv('GITLAB_ACCESS_TOKEN'),
-    --   GITLAB_URL = "https://gitlab.datacomp-intranet.com",
-    -- })
-
-    -- vim.keymap.set("n", "<leader>fm",
-    --   function() prManager.merge_requests(require("telescope.themes").get_ivy {}) end,
-    --   { desc = "Gitlab Merge Requests" })
-
-    vim.keymap.set("n", "<leader>rb", function() vim.cmd('source %') end, { desc = "Source File" })
-
-    vim.keymap.set('n', '<leader>fn', function()
-      builtin.find_files {
-        cwd = vim.fn.stdpath('config')
-      }
-    end, { desc = "Telescope: nvim config files" })
-
-    vim.keymap.set('n', '<leader>fp', function()
-      builtin.find_files {
-        cwd = vim.fs.joinpath(vim.fn.stdpath("data"), "lazy")
-      }
-    end, { desc = "Telescope: plugin files" })
-    vim.keymap.set('n', '<leader>fb', builtin.buffers, { desc = ':Telescope buffers' })
-    vim.keymap.set('n', '<leader>fs', builtin.search_history, { desc = ':Telescope search_history' })
-    vim.keymap.set('n', '<leader>fS', builtin.spell_suggest, { desc = ':Telescope spelling_suggest' })
-    vim.keymap.set('n', '<leader>fh', builtin.help_tags, { desc = ':Telescope help_tags' })
   end
 }
