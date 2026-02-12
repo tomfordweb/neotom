@@ -69,8 +69,9 @@ keymap("i", "<up>", "<nop>", opts)
 keymap("i", "<down>", "<nop>", opts)
 
 
--- close all buffers but this one.
-keymap("n", "<C-w>a", ":%bd|e#", { noremap = true, desc = "Close other buffers" })
+keymap("n", "<C-w>a", ":%bd|e#<CR>", { noremap = true, desc = "Close other buffers" })
+keymap("n", "<C-w>w", function() vim.cmd('bufdo w') end, { silent = true, noremap = true, desc = "Write all buffers" })
+keymap("n", "<C-w>c", ":bd!<CR>", { silent = true, noremap = true, desc = "Close buffer" })
 
 -- plenary
 keymap('n', '<leader>p',
