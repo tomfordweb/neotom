@@ -67,5 +67,6 @@ return {
 
     require('telescope').load_extension('fzf');
     require("neotom.telescope.multigrep").setup()
+    require("neotom.telescope.cwd").setup()
   end
 }
