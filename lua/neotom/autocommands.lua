@@ -74,6 +74,16 @@ autocmd('LspAttach', {
   end
 })
 
+-- JS word nav
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "javascript", "typescript", "javascriptreact", "typescriptreact", "htmlangular" },
+  callback = function()
+    vim.opt_local.iskeyword:append({ '$', '@' })
+    -- treat a dash as a word
+    vim.opt_local.iskeyword:remove({ '-' })
+  end,
+})
+
 -- only do cursorline in active buffer
 -- not quite working yet..
 -- autocmd({ "WinEnter", "BufEnter", "BufWinEnter" }, {
