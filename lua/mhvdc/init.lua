@@ -3,5 +3,6 @@
 vim.filetype.add({
   extension = {
     class = "php",
+    snip = "php",
   },
 })
