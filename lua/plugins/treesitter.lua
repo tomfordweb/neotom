@@ -2,17 +2,16 @@ return {
   "nvim-treesitter/nvim-treesitter",
   dependencies = {
     "nvim-treesitter/nvim-treesitter-context",
-    "dlvandenberg/tree-sitter-angular",
-    'brenoprata10/nvim-highlight-colors',
-    {
-      'dlvandenberg/tree-sitter-angular', branch = 'main'
-    }
+    -- 'brenoprata10/nvim-highlight-colors',
+    -- {
+    --   'dlvandenberg/tree-sitter-angular', branch = 'main'
+    -- }
   },
   branch = 'main',
   lazy = false,
   build = ":TSUpdate",
   config = function()
-    require('nvim-highlight-colors').setup({});
+    -- require('nvim-highlight-colors').setup({});
     require('nvim-treesitter').setup {
       -- A list of parser names, or "all" (the listed parsers MUST always be installed)
 
@@ -24,18 +23,17 @@ return {
       -- Recommendation: set to false if you don't have `tree-sitter` CLI installed locally
       auto_install = true,
 
-      -- List of parsers to ignore installing (or "all")
-      ignore_install = { "javascript" },
 
       indent = { enable = true },
 
-      highlight = {
-        use_languagetree = true,
-        enable = true,
-        additional_vim_regex_highlighting = false,
-      },
+      -- highlight = {
+      --   use_languagetree = true,
+      --   enable = true,
+      --   additional_vim_regex_highlighting = true,
+      -- },
     }
     require('nvim-treesitter').install({
+      "php",
       "json", "angular", "html", "css", "lua", "vim", "vimdoc", "typescript", "javascript", "markdown", "markdown_inline"
 
     })

@@ -75,7 +75,7 @@ autocmd('LspAttach', {
 })
 
 -- JS word nav
-vim.api.nvim_create_autocmd("FileType", {
+autocmd("FileType", {
   pattern = { "javascript", "typescript", "javascriptreact", "typescriptreact", "htmlangular" },
   callback = function()
     vim.opt_local.iskeyword:append({ '$', '@' })
@@ -84,6 +84,13 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
+-- have to start treesitter by hand currently for php
+autocmd('FileType', {
+  pattern = { 'php' },
+  callback = function()
+    vim.treesitter.start()
+  end,
+})
 -- only do cursorline in active buffer
 -- not quite working yet..
 -- autocmd({ "WinEnter", "BufEnter", "BufWinEnter" }, {
