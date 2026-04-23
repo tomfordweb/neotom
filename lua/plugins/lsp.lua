@@ -105,7 +105,11 @@ return {
     require("cmp").setup.filetype('markdown', {
       sources = {},
     })
-    require("fidget").setup({})
+    require("fidget").setup({
+      notification = {
+        override_vim_notify = true
+      }
+    })
     require("mason").setup()
 
     require("mason-lspconfig").setup({

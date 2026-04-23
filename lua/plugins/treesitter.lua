@@ -3,16 +3,18 @@ return {
   dependencies = {
     "nvim-treesitter/nvim-treesitter-context",
     "dlvandenberg/tree-sitter-angular",
-    'brenoprata10/nvim-highlight-colors'
+    'brenoprata10/nvim-highlight-colors',
+    {
+      'dlvandenberg/tree-sitter-angular', branch = 'main'
+    }
   },
-  branch = 'master',
+  branch = 'main',
   lazy = false,
   build = ":TSUpdate",
   config = function()
     require('nvim-highlight-colors').setup({});
-    require('nvim-treesitter.configs').setup {
+    require('nvim-treesitter').setup {
       -- A list of parser names, or "all" (the listed parsers MUST always be installed)
-      ensure_installed = { "angular", "html", "css", "lua", "vim", "vimdoc", "typescript", "javascript", "markdown", "markdown_inline" },
 
       modules = {},
       -- Install parsers synchronously (only applied to `ensure_installed`)
@@ -33,6 +35,10 @@ return {
         additional_vim_regex_highlighting = false,
       },
     }
+    require('nvim-treesitter').install({
+      "json", "angular", "html", "css", "lua", "vim", "vimdoc", "typescript", "javascript", "markdown", "markdown_inline"
+
+    })
 
     require 'treesitter-context'.setup {
       enable = true,            -- Enable this plugin (Can be enabled/disabled later via commands)

@@ -1,9 +1,9 @@
 return {
   'nvim-telescope/telescope.nvim',
-  branch = '0.1.x',
+  version = '*',
   dependencies = {
     'nvim-lua/plenary.nvim',
-    { 'nvim-telescope/telescope-fzf-native.nvim', build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release' },
+    { 'nvim-telescope/telescope-fzf-native.nvim', build = 'make' },
     -- {
     --   dir = vim.fn.expand("$HOME") .. "/code/tomfordweb/telescope-gitlab",
     -- },

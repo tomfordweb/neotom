@@ -1,5 +1,5 @@
-require("neotom.options")
 require("neotom.lazy");
+require("neotom.options")
 require("neotom.remap");
 require("neotom.autocommands");
 require("neotom.lotto-text");
@@ -20,6 +20,7 @@ function SetColors(color)
     bg = "#181825" -- catpuccin.mocha.mantle
   });
 
+  vim.api.nvim_set_hl(0, 'DiffAdd', { fg = '#A6E22E' }) -- Example color
   -- Set the color for relative line numbers
   vim.api.nvim_set_hl(0, 'LineNrAbove', { fg = '#f9e2af', bold = true })
   vim.api.nvim_set_hl(0, 'LineNr', { fg = '#f5c2e7', bold = true })

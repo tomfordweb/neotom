@@ -1,9 +1,8 @@
 return {
-  "folke/snacks.nvim",
-  priority = 1000,
-  lazy = false,
-  opts = {
-    terminal = { enabled = true },
-    notifier = { enabled = true },
-  },
+  "rcarriga/nvim-notify",
+  config = function()
+    require('notify').setup({
+      background_colour = "#000000"
+    })
+  end
 }
