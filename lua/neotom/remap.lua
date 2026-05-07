@@ -70,6 +70,10 @@ keymap("i", "<down>", "<nop>", opts)
 keymap("n", "<C-w>a", ":%bd|e#<CR>", { noremap = true, desc = "Close other buffers" })
 keymap("n", "<C-w>w", function() vim.cmd('bufdo w') end, { silent = true, noremap = true, desc = "Write all buffers" })
 keymap("n", "<C-w>c", ":bd!<CR>", { silent = true, noremap = true, desc = "Close buffer" })
+keymap("n", "<C-w>f", function() vim.fn.setreg('+', vim.fn.expand('%:p')) end,
+  { silent = true, noremap = true, desc = "Yank file path to clipboard" })
+
+
 
 -- plenary
 keymap('n', '<leader>p',
