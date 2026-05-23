@@ -52,7 +52,7 @@ end
 -- Garante um diretório válido mesmo que buffer esteja vazio
 local function get_valid_buf_dir()
   local dir = ts_utils.buffer_dir()
-  return (dir and dir ~= '') and dir or vim.loop.cwd()
+  return (dir and dir ~= '') and dir or vim.uv.cwd()
 end
 
 -- Find files com toggle de cwd

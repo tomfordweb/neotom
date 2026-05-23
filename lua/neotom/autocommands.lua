@@ -6,16 +6,6 @@ local fidget = require('fidget')
 
 
 
--- TODO: move to utils file
-function containsValue(tbl, valueToFind)
-  for _, value in pairs(tbl) do
-    if value == valueToFind then
-      return true -- Value found
-    end
-  end
-  return false -- Value not found
-end
-
 -- blink highlight thing - advent of neovim
 autocmd('TextYankPost', {
   group = augroup('neotom.HighlightYank', {}),

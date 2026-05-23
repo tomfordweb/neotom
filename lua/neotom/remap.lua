@@ -101,7 +101,7 @@ keymap('n', '<leader>N', function()
   }
 end, { desc = "Telescope: nvim config files" })
 
-keymap('n', '<leader>P', function()
+keymap('n', '<leader>L', function()
   builtin.find_files {
     cwd = vim.fs.joinpath(vim.fn.stdpath("data"), "lazy")
   }

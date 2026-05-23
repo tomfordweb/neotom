@@ -32,7 +32,6 @@ return {
 
     -- management
     "williamboman/mason.nvim",
-    "williamboman/mason-lspconfig.nvim",
     "mason-org/mason-lspconfig.nvim",
     -- autocompleteion
     "hrsh7th/cmp-nvim-lsp",
@@ -243,7 +242,7 @@ return {
         { name = "luasnip" },
         -- { name = "copilot" },
         { name = 'nvim_lsp' },
-        { name = "async_path" },
+        { name = "path" },
         { name = "nvim_lua" },
         { name = "lazydev", group_index = 0, -- set group index to 0 to skip loading LuaLS completions
         }
@@ -256,7 +255,6 @@ return {
       -- underline = false,
       signs = {
         severity = {
-          min = vim.diagnostic.severity.INFO,
           min = vim.diagnostic.severity.WARN,
           max = vim.diagnostic.severity.ERROR,
         },

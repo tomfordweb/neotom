@@ -32,4 +32,11 @@ require("lazy").setup({
   install = { colorscheme = { "tokyonight-night" } },
   -- automatically check for plugin updates
   checker = { notify = true, enabled = true },
+  performance = {
+    rtp = {
+      -- lazy resets rtp by default, dropping ~/.local/share/nvim/site where
+      -- treesitter installs parsers — add it back so :checkhealth passes
+      paths = { vim.fn.stdpath("data") .. "/site" },
+    },
+  },
 })
