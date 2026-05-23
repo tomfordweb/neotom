@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+NVIM_REPO="$HOME/code/neovim/neovim"
+NVIM_REMOTE="https://github.com/neovim/neovim.git"
+
+# ── helpers ────────────────────────────────────────────────────────────────────
+
+bold()  { printf '\033[1m%s\033[0m' "$*"; }
+green() { printf '\033[32m%s\033[0m' "$*"; }
+yellow(){ printf '\033[33m%s\033[0m' "$*"; }
+red()   { printf '\033[31m%s\033[0m' "$*"; }
+info()  { echo "  $(bold '→') $*"; }
+step()  { echo; echo "$(bold "── $* ──")"; }
+
+# ── version discovery ──────────────────────────────────────────────────────────
+
+installed_version() {
+    if command -v nvim &>/dev/null; then
+        nvim --version 2>/dev/null | head -1 | grep -oP 'v\d+\.\d+\.\d+[\w\-+.]*' | head -1
+    else
+        echo "(not installed)"
+    fi
+}
+
+latest_stable() {
+    curl -sf "https://api.github.com/repos/neovim/neovim/releases/latest" \
+        | grep -oP '"tag_name":\s*"\K[^"]+' \
+        | head -1
+}
+
+latest_nightly_date() {
+    curl -sf "https://api.github.com/repos/neovim/neovim/releases/tags/nightly" \
+        | grep -oP '"published_at":\s*"\K[^T]+' \
+        | head -1
+}
+
+# ── main ───────────────────────────────────────────────────────────────────────
+
+echo
+echo "$(bold '╔══════════════════════════════╗')"
+echo "$(bold '║      neovim rebuild tool     ║')"
+echo "$(bold '╚══════════════════════════════╝')"
+
+step "checking versions"
+
+INSTALLED=$(installed_version)
+info "fetching latest releases from github..."
+LATEST_STABLE=$(latest_stable 2>/dev/null || echo "unknown")
+NIGHTLY_DATE=$(latest_nightly_date 2>/dev/null || echo "unknown")
+
+echo
+printf "  %-16s %s\n" "installed:"    "$(green "$INSTALLED")"
+printf "  %-16s %s\n" "latest stable:" "$(yellow "$LATEST_STABLE")"
+printf "  %-16s %s\n" "nightly:"      "nightly ($NIGHTLY_DATE)"
+echo
+
+DEFAULT_VERSION="${LATEST_STABLE:-nightly}"
+read -rp "  Version to install [$DEFAULT_VERSION]: " INPUT_VERSION
+VERSION="${INPUT_VERSION:-$DEFAULT_VERSION}"
+
+if [[ -z "$VERSION" ]]; then
+    echo "$(red 'error: no version specified')" >&2
+    exit 1
+fi
+
+echo
+echo "  Building: $(bold "$VERSION")"
+read -rp "  Proceed? [y/N] " CONFIRM
+[[ "$CONFIRM" =~ ^[Yy]$ ]] || { echo "aborted."; exit 0; }
+
+# ── purge user data ────────────────────────────────────────────────────────────
+
+step "purging local nvim data"
+
+purge_dir() {
+    local dir="$1"
+    if [[ -d "$dir" ]]; then
+        rm -rf "$dir"
+        info "removed $dir"
+    fi
+}
+
+purge_dir "$HOME/.local/share/nvim"
+purge_dir "$HOME/.local/state/nvim"
+purge_dir "$HOME/.cache/nvim"
+
+# ── purge system runtime (requires sudo) ───────────────────────────────────────
+
+step "purging system nvim runtime (sudo)"
+
+sudo_purge_dir() {
+    local dir="$1"
+    if sudo test -d "$dir"; then
+        sudo rm -rf "$dir"
+        info "removed $dir"
+    fi
+}
+
+sudo_purge_dir "/usr/local/share/nvim/runtime"
+sudo_purge_dir "/usr/local/lib/nvim/parser"
+
+# ── prepare source repo ────────────────────────────────────────────────────────
+
+step "preparing source repo"
+
+if [[ ! -d "$NVIM_REPO/.git" ]]; then
+    info "cloning neovim into $NVIM_REPO"
+    mkdir -p "$(dirname "$NVIM_REPO")"
+    git clone "$NVIM_REMOTE" "$NVIM_REPO"
+fi
+
+cd "$NVIM_REPO"
+
+info "fetching tags and updates"
+git fetch --tags --prune --force
+
+info "cleaning build artifacts"
+rm -rf build .deps
+
+info "checking out $VERSION"
+git checkout "$VERSION"
+
+# show what commit we're on
+COMMIT=$(git log --oneline -1)
+info "at commit: $COMMIT"
+
+# ── compile ────────────────────────────────────────────────────────────────────
+
+step "compiling (this takes a while)"
+
+JOBS=$(nproc 2>/dev/null || echo 4)
+info "using $JOBS parallel jobs"
+
+make CMAKE_BUILD_TYPE=RelWithDebInfo -j"$JOBS"
+
+# ── install ────────────────────────────────────────────────────────────────────
+
+step "installing (sudo)"
+
+sudo make install
+
+# ── verify ────────────────────────────────────────────────────────────────────
+
+step "done"
+
+NEW_VERSION=$(nvim --version 2>/dev/null | head -1 || echo "could not determine")
+echo
+echo "  $(green "$(bold "installed: $NEW_VERSION")")"
+echo
+echo "  Run $(bold 'nvim +checkhealth') to verify everything is healthy."
+echo
