@@ -57,6 +57,8 @@ local function define_hl()
   set(0, "NeotomKey", { fg = "#ffd75f", bold = true })
   set(0, "NeotomMRU", { fg = "#cfe8d8" })
   set(0, "NeotomPR", { fg = "#79c0ff", underline = true })
+  set(0, "NeotomWT", { fg = "#c9b8ff" })
+  set(0, "NeotomWTActive", { fg = "#e8d8ff", bold = true })
 end
 
 -- ----------------------------------------------------------------------------
@@ -75,6 +77,26 @@ local function get_mru()
     end
   end
   return files
+end
+
+local function get_worktrees()
+  local cwd = vim.fn.getcwd()
+  local out = vim.fn.systemlist({ "git", "-C", cwd, "worktree", "list", "--porcelain" })
+  local trees, current = {}, {}
+  for _, line in ipairs(out) do
+    if line == "" then
+      if current.path then trees[#trees + 1] = current end
+      current = {}
+    elseif line:match("^worktree ") then
+      current.path = line:sub(10)
+    elseif line:match("^branch ") then
+      current.branch = line:sub(8):gsub("^refs/heads/", "")
+    elseif line == "bare" then
+      current.branch = "(bare)"
+    end
+  end
+  if current.path then trees[#trees + 1] = current end
+  return trees
 end
 
 local function fetch_prs(state)
@@ -176,13 +198,14 @@ local function build_frame(state, W, H)
   local art_h = #art
   local left = math.max(0, math.floor((W - art_w) / 2))
   local art_top = 3
-  local band_bot = art_top + art_h + 2
+  local rain_bot = H - 1
 
   -- advance rain (resize-aware)
-  if state.W ~= W then
+  if state.W ~= W or state.H ~= H then
     state.W = W
+    state.H = H
     state.drops = {}
-    for c = 1, W do state.drops[c] = new_drop(band_bot) end
+    for c = 1, W do state.drops[c] = new_drop(rain_bot) end
   end
   for c = 1, W do
     local d = state.drops[c]
@@ -192,8 +215,8 @@ local function build_frame(state, W, H)
       for r = d.last + 1, head do d.glyphs[r] = rand_glyph() end
       d.last = head
     end
-    if d.y - d.len > band_bot then
-      state.drops[c] = new_drop(band_bot)
+    if d.y - d.len > rain_bot then
+      state.drops[c] = new_drop(rain_bot)
     end
   end
 
@@ -204,7 +227,7 @@ local function build_frame(state, W, H)
     local head = math.floor(d.y)
     for k = 0, d.len - 1 do
       local r = head - k
-      if r >= 0 and r <= band_bot then
+      if r >= 0 and r <= rain_bot then
         rain_ch[r] = rain_ch[r] or {}
         rain_hl[r] = rain_hl[r] or {}
         rain_ch[r][c] = d.glyphs[r] or rand_glyph()
@@ -233,15 +256,109 @@ local function build_frame(state, W, H)
     flicker = math.random() < 0.06
   end
 
-  local lines, segs = {}, {}
+  -- build content overlay: absolute row -> { text, spans={{col0,col1,hl},...} }
+  local ov_rows = {}
+  local actions = {}
+  local cur = art_top + art_h + 2
 
-  -- band rows (rain + wordmark overlay)
-  for r = 0, band_bot do
+  local function push_ov(str)
+    if cur < H then ov_rows[cur] = { text = str, spans = {} } end
+    local r = cur
+    cur = cur + 1
+    return r
+  end
+  local function push_ov_seg(str, hl, col0, col1)
+    local r = push_ov(str)
+    if ov_rows[r] then
+      ov_rows[r].spans[#ov_rows[r].spans + 1] = { col0 or 0, col1 or #str, hl }
+    end
+    return r
+  end
+
+  push_ov("")
+  push_ov_seg("  MOST RECENT", "NeotomHint")
+  local mru = state.mru
+  if #mru == 0 then
+    push_ov_seg("  (none)", "NeotomDim")
+  else
+    for i, f in ipairs(mru) do
+      local icon, ihl = " ", "NeotomMRU"
+      if state.devicons then
+        local name = vim.fn.fnamemodify(f, ":t")
+        local ext = vim.fn.fnamemodify(f, ":e")
+        local ic, hl = state.devicons.get_icon(name, ext, { default = true })
+        if ic then icon, ihl = ic, hl or "NeotomMRU" end
+      end
+      local key = "  [" .. i .. "] "
+      local disp = vim.fn.fnamemodify(f, ":~:.")
+      local str = key .. icon .. " " .. disp
+      local r = push_ov(str)
+      if ov_rows[r] then
+        ov_rows[r].spans[#ov_rows[r].spans + 1] = { 0, #key, "NeotomKey" }
+        ov_rows[r].spans[#ov_rows[r].spans + 1] = { #key, #key + #icon, ihl }
+        ov_rows[r].spans[#ov_rows[r].spans + 1] = { #key + #icon, #str, "NeotomMRU" }
+      end
+      actions[r] = function() state.open_file(f) end
+    end
+  end
+
+  push_ov("")
+  push_ov_seg("  WORKTREES", "NeotomHint")
+  local worktrees = state.worktrees
+  if not worktrees or #worktrees == 0 then
+    push_ov_seg("  (none)", "NeotomDim")
+  else
+    local active = vim.fn.getcwd()
+    for _, wt in ipairs(worktrees) do
+      local is_active = wt.path == active
+      local branch = wt.branch or "(detached)"
+      local name = vim.fn.fnamemodify(wt.path, ":t")
+      local str = "   " .. (is_active and "* " or "  ") .. name .. "  [" .. branch .. "]"
+      local r = push_ov(str)
+      if ov_rows[r] then
+        ov_rows[r].spans[#ov_rows[r].spans + 1] = { 0, #str, is_active and "NeotomWTActive" or "NeotomWT" }
+      end
+      local path = wt.path
+      actions[r] = function()
+        M.stop()
+        vim.cmd("cd " .. vim.fn.fnameescape(path))
+        vim.cmd("enew")
+        vim.notify("cwd → " .. path, vim.log.levels.INFO)
+      end
+    end
+  end
+
+  push_ov("")
+  push_ov_seg("  PULL REQUESTS", "NeotomHint")
+  if state.pr_status == "loading" then
+    push_ov_seg("  decrypting...", "NeotomDim")
+  elseif state.pr_status == "none" then
+    push_ov_seg("  (none)", "NeotomDim")
+  else
+    for _, pr in ipairs(state.prs) do
+      local str = "   " .. pr.title
+      local r = push_ov(str)
+      if ov_rows[r] then
+        ov_rows[r].spans[#ov_rows[r].spans + 1] = { 0, #str, "NeotomPR" }
+      end
+      actions[r] = function() vim.ui.open(pr.url) end
+    end
+  end
+
+  push_ov("")
+  push_ov_seg("  " .. state.footer1, "NeotomDim")
+  push_ov_seg("  " .. state.footer2, "NeotomDim")
+
+  -- render all H rows: rain everywhere, content + wordmark overlaid on top
+  local lines, segs = {}, {}
+  for r = 0, H - 1 do
     local chars, hls = {}, {}
     for c = 1, W do
       chars[c] = (rain_ch[r] and rain_ch[r][c]) or " "
       hls[c] = (rain_hl[r] and rain_hl[r][c]) or false
     end
+
+    -- overlay wordmark
     local arow = r - art_top
     if arow >= 0 and arow < art_h then
       local dx = (tear_row == arow) and tear_dx or 0
@@ -275,64 +392,22 @@ local function build_frame(state, W, H)
         end
       end
     end
+
+    -- overlay content text onto rain
+    local ov = ov_rows[r]
+    if ov then
+      local text = ov.text
+      local tlen = math.min(#text, W)
+      for ci = 1, tlen do hls[ci] = false end
+      for _, sp in ipairs(ov.spans) do
+        local c0, c1, hl = sp[1], sp[2], sp[3]
+        for ci = c0 + 1, math.min(c1, W) do hls[ci] = hl end
+      end
+      for ci = 1, tlen do chars[ci] = text:sub(ci, ci) end
+    end
+
     lines[r + 1] = emit_row(segs, r, chars, hls, W)
   end
-
-  -- lower sections
-  local actions = {}
-  local function push(str)
-    lines[#lines + 1] = str
-    return #lines - 1
-  end
-  local function push_seg(str, hl, col0, col1)
-    local r = push(str)
-    segs[#segs + 1] = { r, col0 or 0, col1 or #str, hl }
-    return r
-  end
-
-  push("")
-  push_seg("  MOST RECENT", "NeotomHint")
-  local mru = state.mru
-  if #mru == 0 then
-    push_seg("  (none)", "NeotomDim")
-  else
-    for i, f in ipairs(mru) do
-      local icon, ihl = " ", "NeotomMRU"
-      if state.devicons then
-        local name = vim.fn.fnamemodify(f, ":t")
-        local ext = vim.fn.fnamemodify(f, ":e")
-        local ic, hl = state.devicons.get_icon(name, ext, { default = true })
-        if ic then icon, ihl = ic, hl or "NeotomMRU" end
-      end
-      local key = "  [" .. i .. "] "
-      local disp = vim.fn.fnamemodify(f, ":~:.")
-      local str = key .. icon .. " " .. disp
-      local r = push(str)
-      segs[#segs + 1] = { r, 0, #key, "NeotomKey" }
-      segs[#segs + 1] = { r, #key, #key + #icon, ihl }
-      segs[#segs + 1] = { r, #key + #icon, #str, "NeotomMRU" }
-      actions[r] = function() state.open_file(f) end
-    end
-  end
-
-  push("")
-  push_seg("  PULL REQUESTS", "NeotomHint")
-  if state.pr_status == "loading" then
-    push_seg("  decrypting...", "NeotomDim")
-  elseif state.pr_status == "none" then
-    push_seg("  (none)", "NeotomDim")
-  else
-    for _, pr in ipairs(state.prs) do
-      local str = "   " .. pr.title
-      local r = push(str)
-      segs[#segs + 1] = { r, 0, #str, "NeotomPR" }
-      actions[r] = function() vim.ui.open(pr.url) end
-    end
-  end
-
-  push("")
-  push_seg("  " .. state.footer1, "NeotomDim")
-  push_seg("  " .. state.footer2, "NeotomDim")
 
   state.actions = actions
   return lines, segs
@@ -410,7 +485,7 @@ local function set_keymaps(buf, state)
   map("r", function() fetch_prs(state) end)
   map("q", function()
     M.stop()
-    vim.cmd("enew")
+    vim.cmd("qa")
   end)
   map("<Esc>", function()
     M.stop()
@@ -430,8 +505,10 @@ function M.open()
     phase = "typing",
     reveal = 0,
     W = nil,
+    H = nil,
     drops = {},
     mru = get_mru(),
+    worktrees = get_worktrees(),
     prs = {},
     pr_status = "loading",
     actions = {},
