@@ -57,10 +57,10 @@ autocmd('LspAttach', {
     end, { buffer = e.buf, desc = "Code action" })
     vim.keymap.set("n", "gr", function() vim.lsp.buf.references() end, { buffer = e.buf, desc = "Go to references" })
     vim.keymap.set("n", "<leader>cr", function() vim.lsp.buf.rename() end, { buffer = e.buf, desc = "Rename" })
-    vim.keymap.set("n", "[j", function() vim.diagnostic.goto_next() end,
-      { buffer = e.buf, desc = "Go to next diagnostic" })
-    vim.keymap.set("n", "]k", function() vim.diagnostic.goto_prev() end,
-      { buffer = e.buf, desc = "Go to previous diagnostic" })
+    vim.keymap.set("n", "]d", function() vim.diagnostic.jump({ count = 1, float = true }) end,
+      { buffer = e.buf, desc = "Next diagnostic" })
+    vim.keymap.set("n", "[d", function() vim.diagnostic.jump({ count = -1, float = true }) end,
+      { buffer = e.buf, desc = "Prev diagnostic" })
   end
 })
 
