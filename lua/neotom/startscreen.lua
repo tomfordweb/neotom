@@ -7,6 +7,19 @@ local uv = vim.uv or vim.loop
 local M = {}
 
 local ns = api.nvim_create_namespace("neotom_start")
+
+local function open_url(url)
+  if not url or url == "" then return end
+  vim.fn.setreg("+", url)
+  local encoded = vim.base64.encode(url)
+  local tty = io.open("/dev/tty", "w")
+  if tty then
+    tty:write(string.format("\27]52;c;%s\7", encoded))
+    tty:close()
+  end
+  vim.fn.jobstart({ "xdg-open", url }, { detach = true })
+  vim.notify("Copied: " .. url, vim.log.levels.INFO)
+end
 local FPS_MS = 66        -- active fps while the wordmark dissolves in
 local IDLE_FPS_MS = 120  -- slower fps once fully revealed
 
@@ -328,7 +341,7 @@ local function build_overlay(state, W, H, art_top, art_h)
       if ov_rows[r] then
         ov_rows[r].spans[#ov_rows[r].spans + 1] = { 0, #str, "NeotomPR" }
       end
-      actions[r] = function() vim.ui.open(pr.url) end
+      actions[r] = function() open_url(pr.url) end
     end
   end
 

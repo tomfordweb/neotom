@@ -142,9 +142,16 @@ local function open_url(url)
   if not url or url == "" then
     return
   end
-  vim.fn.setreg("+", url)                                 -- SSH-safe clipboard (OSC52)
+  vim.fn.setreg("+", url)
+  -- OSC52: works over SSH when terminal supports it
+  local encoded = vim.base64.encode(url)
+  local tty = io.open("/dev/tty", "w")
+  if tty then
+    tty:write(string.format("\27]52;c;%s\7", encoded))
+    tty:close()
+  end
   vim.fn.jobstart({ "xdg-open", url }, { detach = true }) -- no-op if headless
-  vim.notify(url, vim.log.levels.INFO)                    -- cmdline fallback
+  vim.notify("Copied: " .. url, vim.log.levels.INFO)
 end
 
 local function make_entry_maker()
