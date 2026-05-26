@@ -74,11 +74,10 @@ autocmd("FileType", {
   end,
 })
 
--- have to start treesitter by hand currently for php
 autocmd('FileType', {
-  pattern = { 'php' },
-  callback = function()
-    vim.treesitter.start()
+  pattern = '*',
+  callback = function(args)
+    pcall(vim.treesitter.start, args.buf)
   end,
 })
 -- only do cursorline in active buffer

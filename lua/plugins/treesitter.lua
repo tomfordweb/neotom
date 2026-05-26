@@ -3,19 +3,22 @@ return {
   dependencies = {
     "nvim-treesitter/nvim-treesitter-context",
     -- 'brenoprata10/nvim-highlight-colors',
-    -- {
-    --   'dlvandenberg/tree-sitter-angular', branch = 'main'
-    -- }
   },
   branch = 'main',
   lazy = false,
   build = ":TSUpdate",
   config = function()
+    -- nvim-treesitter main branch stores queries in runtime/ which isn't auto-added to rtp
+    local ts_runtime = vim.fn.stdpath('data') .. '/lazy/nvim-treesitter/runtime'
+    if vim.fn.isdirectory(ts_runtime) == 1 then
+      vim.opt.rtp:append(ts_runtime)
+    end
+
     -- require('nvim-highlight-colors').setup({});
     require('nvim-treesitter').setup {
       ensure_installed = {
         "php",
-        "json", "angular", "html", "css", "lua", "vim", "vimdoc", "typescript", "javascript", "markdown", "markdown_inline"
+        "json", "angular", "html", "css", "lua", "vim", "vimdoc", "typescript", "javascript", "markdown", "markdown_inline", "yaml"
       },
       sync_install = false,
       auto_install = true,
