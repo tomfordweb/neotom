@@ -673,20 +673,10 @@ function M.open()
   vim.bo[buf].buftype = "nofile"
   vim.bo[buf].bufhidden = "wipe"
   vim.bo[buf].swapfile = false
-  vim.bo[buf].filetype = "neotomstart"
   vim.bo[buf].modifiable = false
 
   api.nvim_win_set_buf(0, buf)
-  local win = api.nvim_get_current_win()
-  vim.wo[win].number = false
-  vim.wo[win].relativenumber = false
-  vim.wo[win].list = false
-  vim.wo[win].signcolumn = "no"
-  vim.wo[win].cursorline = false
-  vim.wo[win].wrap = false
-  vim.wo[win].spell = false
-  vim.wo[win].colorcolumn = ""
-  vim.wo[win].fillchars = "eob: "
+  vim.bo[buf].filetype = "neotomstart"
 
   set_keymaps(buf, state)
   fetch_worktrees(state)
