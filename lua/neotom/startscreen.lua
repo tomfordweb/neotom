@@ -7,7 +7,8 @@ local uv = vim.uv or vim.loop
 local M = {}
 
 local ns = api.nvim_create_namespace("neotom_start")
-local FPS_MS = 66
+local FPS_MS = 66        -- active fps while the wordmark dissolves in
+local IDLE_FPS_MS = 120  -- slower fps once fully revealed
 
 -- NEOTOM wordmark (verbatim from the old alpha startify header)
 local ART = {
@@ -62,8 +63,13 @@ local function define_hl()
 end
 
 -- ----------------------------------------------------------------------------
--- sources: MRU + async PRs
+-- sources: MRU + async worktrees/HEAD/PRs (all bump state.ov_version on update
+-- so the cached overlay is rebuilt)
 -- ----------------------------------------------------------------------------
+local function bump(state)
+  state.ov_version = (state.ov_version or 0) + 1
+end
+
 local function get_mru()
   local files, seen = {}, {}
   local cache = vim.fn.stdpath("cache")
@@ -79,24 +85,43 @@ local function get_mru()
   return files
 end
 
-local function get_worktrees()
+local function fetch_worktrees(state)
   local cwd = vim.fn.getcwd()
-  local out = vim.fn.systemlist({ "git", "-C", cwd, "worktree", "list", "--porcelain" })
-  local trees, current = {}, {}
-  for _, line in ipairs(out) do
-    if line == "" then
+  vim.system({ "git", "-C", cwd, "worktree", "list", "--porcelain" }, { text = true }, function(o)
+    local trees, current = {}, {}
+    if o.code == 0 and o.stdout then
+      for line in (o.stdout .. "\n"):gmatch("([^\n]*)\n") do
+        if line == "" then
+          if current.path then trees[#trees + 1] = current end
+          current = {}
+        elseif line:match("^worktree ") then
+          current.path = line:sub(10)
+        elseif line:match("^branch ") then
+          current.branch = line:sub(8):gsub("^refs/heads/", "")
+        elseif line == "bare" then
+          current.branch = "(bare)"
+        end
+      end
       if current.path then trees[#trees + 1] = current end
-      current = {}
-    elseif line:match("^worktree ") then
-      current.path = line:sub(10)
-    elseif line:match("^branch ") then
-      current.branch = line:sub(8):gsub("^refs/heads/", "")
-    elseif line == "bare" then
-      current.branch = "(bare)"
     end
-  end
-  if current.path then trees[#trees + 1] = current end
-  return trees
+    vim.schedule(function()
+      state.worktrees = trees
+      bump(state)
+    end)
+  end)
+end
+
+local function fetch_head(state)
+  local cfg = vim.fn.stdpath("config")
+  vim.system({ "git", "-C", cfg, "rev-parse", "--short", "HEAD" }, { text = true }, function(o)
+    local head = "?"
+    if o.code == 0 and o.stdout then head = o.stdout:gsub("%s+$", "") end
+    if head == "" then head = "?" end
+    vim.schedule(function()
+      state.footer2 = "neotom " .. head
+      bump(state)
+    end)
+  end)
 end
 
 local function fetch_prs(state)
@@ -114,6 +139,7 @@ local function fetch_prs(state)
       vim.schedule(function()
         state.pr_status = "none"
         state.prs = {}
+        bump(state)
       end)
       return
     end
@@ -128,12 +154,14 @@ local function fetch_prs(state)
         if r.code ~= 0 or not r.stdout or r.stdout == "" then
           state.pr_status = "none"
           state.prs = {}
+          bump(state)
           return
         end
         local ok, data = pcall(vim.json.decode, r.stdout)
         if not ok or type(data) ~= "table" then
           state.pr_status = "none"
           state.prs = {}
+          bump(state)
           return
         end
         local prs = {}
@@ -145,6 +173,7 @@ local function fetch_prs(state)
         end
         state.prs = prs
         state.pr_status = (#prs > 0) and "loaded" or "none"
+        bump(state)
       end)
     end)
   end)
@@ -153,7 +182,20 @@ end
 -- ----------------------------------------------------------------------------
 -- rendering helpers
 -- ----------------------------------------------------------------------------
-local function emit_row(segs, row0, chars, hls, width)
+-- seg pool: reuse the entry tables across frames to avoid per-frame GC churn
+local function add_seg(state, row0, c0, c1, hl)
+  local n = state.seg_n + 1
+  local s = state.segs[n]
+  if s then
+    s[1], s[2], s[3], s[4] = row0, c0, c1, hl
+  else
+    state.segs[n] = { row0, c0, c1, hl }
+  end
+  state.seg_n = n
+end
+
+-- collapse a row's per-cell hls into contiguous extmark spans; returns row text
+local function emit_row(state, row0, chars, hls, width)
   local n = width
   local i = 1
   while i <= n do
@@ -161,7 +203,7 @@ local function emit_row(segs, row0, chars, hls, width)
     if h then
       local j = i
       while j + 1 <= n and hls[j + 1] == h do j = j + 1 end
-      segs[#segs + 1] = { row0, i - 1, j, h }
+      add_seg(state, row0, i - 1, j, h)
       i = j + 1
     else
       i = i + 1
@@ -190,80 +232,18 @@ local function trail_hl(k, len)
 end
 
 -- ----------------------------------------------------------------------------
--- frame builder
+-- static overlay (MRU / worktrees / PRs / footer)
+-- Built once per (art-choice, H, data-version) and cached on state, since the
+-- content + devicon lookups don't change between data updates.
 -- ----------------------------------------------------------------------------
-local function build_frame(state, W, H)
-  local art = (W < #ART[1] + 2) and COMPACT or ART
-  local art_w = #art[1]
-  local art_h = #art
-  local left = math.max(0, math.floor((W - art_w) / 2))
-  local art_top = 3
-  local rain_bot = H - 1
-
-  -- advance rain (resize-aware)
-  if state.W ~= W or state.H ~= H then
-    state.W = W
-    state.H = H
-    state.drops = {}
-    for c = 1, W do state.drops[c] = new_drop(rain_bot) end
-  end
-  for c = 1, W do
-    local d = state.drops[c]
-    d.y = d.y + d.speed
-    local head = math.floor(d.y)
-    if head ~= d.last then
-      for r = d.last + 1, head do d.glyphs[r] = rand_glyph() end
-      d.last = head
-    end
-    if d.y - d.len > rain_bot then
-      state.drops[c] = new_drop(rain_bot)
-    end
-  end
-
-  -- precompute rain cells: rain_ch[r][c], rain_hl[r][c]
-  local rain_ch, rain_hl = {}, {}
-  for c = 1, W do
-    local d = state.drops[c]
-    local head = math.floor(d.y)
-    for k = 0, d.len - 1 do
-      local r = head - k
-      if r >= 0 and r <= rain_bot then
-        rain_ch[r] = rain_ch[r] or {}
-        rain_hl[r] = rain_hl[r] or {}
-        rain_ch[r][c] = d.glyphs[r] or rand_glyph()
-        rain_hl[r][c] = trail_hl(k, d.len)
-      end
-    end
-  end
-
-  -- text fx state
-  if state.phase == "typing" then
-    state.reveal = state.reveal + 2
-    if state.reveal >= art_w then state.phase = "glitch" end
-  end
-  local corrupt, tear_row, tear_dx, flicker = {}, nil, 0, false
-  if state.phase == "glitch" then
-    local n = math.random(0, 6)
-    for _ = 1, n do
-      local rr = math.random(0, art_h - 1)
-      corrupt[rr] = corrupt[rr] or {}
-      corrupt[rr][math.random(1, art_w)] = (math.random() < 0.5) and "NeotomGlitchR" or "NeotomGlitchC"
-    end
-    if math.random() < 0.3 then
-      tear_row = math.random(0, art_h - 1)
-      tear_dx = math.random(-2, 2)
-    end
-    flicker = math.random() < 0.06
-  end
-
-  -- build content overlay: absolute row -> { text, spans={{col0,col1,hl},...} }
+local function build_overlay(state, W, H, art_top, art_h)
   local ov_rows = {}
   local actions = {}
   local cur = art_top + art_h + 2
 
   local function push_ov(str)
-    if cur < H then ov_rows[cur] = { text = str, spans = {} } end
     local r = cur
+    if cur < H then ov_rows[cur] = { text = str, spans = {} } end
     cur = cur + 1
     return r
   end
@@ -274,9 +254,13 @@ local function build_frame(state, W, H)
     end
     return r
   end
+  -- tag a row for the typewriter/glitch effect (titles + footer only)
+  local function anim(r)
+    if ov_rows[r] then ov_rows[r].anim = true end
+  end
 
   push_ov("")
-  push_ov_seg("  MOST RECENT", "NeotomHint")
+  anim(push_ov_seg("  MOST RECENT", "NeotomHint"))
   local mru = state.mru
   if #mru == 0 then
     push_ov_seg("  (none)", "NeotomDim")
@@ -294,18 +278,21 @@ local function build_frame(state, W, H)
       local str = key .. icon .. " " .. disp
       local r = push_ov(str)
       if ov_rows[r] then
-        ov_rows[r].spans[#ov_rows[r].spans + 1] = { 0, #key, "NeotomKey" }
-        ov_rows[r].spans[#ov_rows[r].spans + 1] = { #key, #key + #icon, ihl }
-        ov_rows[r].spans[#ov_rows[r].spans + 1] = { #key + #icon, #str, "NeotomMRU" }
+        local sp = ov_rows[r].spans
+        sp[#sp + 1] = { 0, #key, "NeotomKey" }
+        sp[#sp + 1] = { #key, #key + #icon, ihl }
+        sp[#sp + 1] = { #key + #icon, #str, "NeotomMRU" }
       end
       actions[r] = function() state.open_file(f) end
     end
   end
 
   push_ov("")
-  push_ov_seg("  WORKTREES", "NeotomHint")
+  anim(push_ov_seg("  WORKTREES", "NeotomHint"))
   local worktrees = state.worktrees
-  if not worktrees or #worktrees == 0 then
+  if worktrees == nil then
+    push_ov_seg("  scanning...", "NeotomDim")
+  elseif #worktrees == 0 then
     push_ov_seg("  (none)", "NeotomDim")
   else
     local active = vim.fn.getcwd()
@@ -329,7 +316,7 @@ local function build_frame(state, W, H)
   end
 
   push_ov("")
-  push_ov_seg("  PULL REQUESTS", "NeotomHint")
+  anim(push_ov_seg("  PULL REQUESTS", "NeotomHint"))
   if state.pr_status == "loading" then
     push_ov_seg("  decrypting...", "NeotomDim")
   elseif state.pr_status == "none" then
@@ -346,71 +333,194 @@ local function build_frame(state, W, H)
   end
 
   push_ov("")
-  push_ov_seg("  " .. state.footer1, "NeotomDim")
-  push_ov_seg("  " .. state.footer2, "NeotomDim")
+  anim(push_ov_seg("  " .. state.footer1, "NeotomDim"))
+  anim(push_ov_seg("  " .. state.footer2, "NeotomDim"))
 
-  -- render all H rows: rain everywhere, content + wordmark overlaid on top
-  local lines, segs = {}, {}
-  for r = 0, H - 1 do
-    local chars, hls = {}, {}
-    for c = 1, W do
-      chars[c] = (rain_ch[r] and rain_ch[r][c]) or " "
-      hls[c] = (rain_hl[r] and rain_hl[r][c]) or false
+  return ov_rows, actions
+end
+
+-- ----------------------------------------------------------------------------
+-- frame builder
+-- ----------------------------------------------------------------------------
+local function build_frame(state, W, H)
+  local art = (W < #ART[1] + 2) and COMPACT or ART
+  local is_compact = art == COMPACT
+  local art_w = #art[1]
+  local art_h = #art
+  local left = math.max(0, math.floor((W - art_w) / 2))
+  local art_top = 3
+  local rain_bot = H - 1
+
+  -- (re)allocate drops + reusable row buffers on resize
+  if state.W ~= W or state.H ~= H then
+    state.W = W
+    state.H = H
+    state.drops = {}
+    local cb, hb = {}, {}
+    for c = 1, W do state.drops[c] = new_drop(rain_bot) end
+    for r = 0, H - 1 do
+      local rc, rh = {}, {}
+      for c = 1, W do rc[c] = " "; rh[c] = false end
+      cb[r] = rc; hb[r] = rh
     end
+    state.chars_buf = cb
+    state.hls_buf = hb
+    state.ov_cache_key = nil -- art-choice / H may have changed
+    -- reset rain-dissolve reveal state (geometry/art may have changed)
+    local tg = 0
+    for _, l in ipairs(art) do
+      for i = 1, #l do if l:byte(i) ~= 32 then tg = tg + 1 end end
+    end
+    state.total_glyphs = tg
+    state.exposed = {}
+    state.exposed_count = 0
+    state.done = false
+    state.fresh = {}
+  end
 
-    -- overlay wordmark
-    local arow = r - art_top
-    if arow >= 0 and arow < art_h then
-      local dx = (tear_row == arow) and tear_dx or 0
+  -- advance rain
+  for c = 1, W do
+    local d = state.drops[c]
+    d.y = d.y + d.speed
+    local head = math.floor(d.y)
+    if head ~= d.last then
+      for r = d.last + 1, head do d.glyphs[r] = rand_glyph() end
+      d.last = head
+    end
+    if d.y - d.len > rain_bot then
+      state.drops[c] = new_drop(rain_bot)
+    end
+  end
+
+  -- rain-dissolve reveal: a wordmark cell is exposed once a rain drop in its
+  -- column has dripped past its row; freshly-exposed cells flash this frame
+  local fresh = state.fresh
+  for k in pairs(fresh) do fresh[k] = nil end
+  for arow = 0, art_h - 1 do
+    local line = art[arow + 1]
+    local r = art_top + arow
+    local erow = state.exposed[arow]
+    if not erow then erow = {}; state.exposed[arow] = erow end
+    for ac = 1, art_w do
+      if not erow[ac] and line:byte(ac) ~= 32 then
+        local col = left + ac
+        local d = (col >= 1 and col <= W) and state.drops[col] or nil
+        if d and math.floor(d.y) >= r then
+          erow[ac] = true
+          state.exposed_count = state.exposed_count + 1
+          fresh[arow * 4096 + ac] = true
+        end
+      end
+    end
+  end
+  if not state.done and state.exposed_count >= state.total_glyphs then
+    state.done = true
+  end
+
+  -- cached static overlay (rebuilt only when art-choice / H / data changes)
+  local key = (is_compact and "C" or "F") .. ":" .. H .. ":" .. (state.ov_version or 0)
+  if state.ov_cache_key ~= key then
+    state.ov_rows, state.ov_actions = build_overlay(state, W, H, art_top, art_h)
+    state.ov_cache_key = key
+  end
+  local ov_rows = state.ov_rows
+  state.actions = state.ov_actions
+
+  -- fill reusable buffers: rain background, then wordmark + content on top
+  local cb, hb = state.chars_buf, state.hls_buf
+  for r = 0, H - 1 do
+    local rc, rh = cb[r], hb[r]
+    for c = 1, W do rc[c] = " "; rh[c] = false end
+  end
+
+  -- rain, written column-major straight into the row buffers
+  for c = 1, W do
+    local d = state.drops[c]
+    local head = math.floor(d.y)
+    local len = d.len
+    for k = 0, len - 1 do
+      local r = head - k
+      if r >= 0 and r <= rain_bot then
+        cb[r][c] = d.glyphs[r] or rand_glyph()
+        hb[r][c] = trail_hl(k, len)
+      end
+    end
+  end
+
+  -- wordmark overlay: exposed letters shown; the passing drip head flashes bright
+  for arow = 0, art_h - 1 do
+    local r = art_top + arow
+    if r >= 0 and r <= rain_bot then
+      local rc, rh = cb[r], hb[r]
       local line = art[arow + 1]
+      local erow = state.exposed[arow]
       for ac = 1, art_w do
-        local revealed = (state.phase == "glitch") or (ac <= state.reveal)
-        if revealed then
-          local glyph = line:sub(ac, ac)
-          if glyph ~= " " then
-            local col = left + ac + dx
-            if col >= 1 and col <= W then
-              local hl = "NeotomText"
-              if flicker then
-                hl = "NeotomDim"
-              elseif corrupt[arow] and corrupt[arow][ac] then
-                hl = corrupt[arow][ac]
-                glyph = rand_glyph()
-              end
-              chars[col] = glyph
-              hls[col] = hl
+        if line:byte(ac) ~= 32 then
+          local col = left + ac
+          if col >= 1 and col <= W then
+            local d = state.drops[col]
+            local head = d and math.floor(d.y) or -1
+            if head == r or fresh[arow * 4096 + ac] then
+              rc[col] = line:sub(ac, ac)
+              rh[col] = "NeotomRainHead"
+            elseif erow and erow[ac] then
+              rc[col] = line:sub(ac, ac)
+              rh[col] = "NeotomText"
             end
           end
         end
       end
-      -- typing cursor bar
-      if state.phase == "typing" then
-        local col = left + math.min(state.reveal + 1, art_w)
-        if col >= 1 and col <= W then
-          chars[col] = "▌"
-          hls[col] = "NeotomRainHead"
+    end
+  end
+
+  -- little red glitches on already-exposed letters
+  for _ = 1, math.random(0, 2) do
+    local arow = math.random(0, art_h - 1)
+    local erow = state.exposed[arow]
+    if erow then
+      local ac = math.random(1, art_w)
+      if erow[ac] then
+        local r = art_top + arow
+        local col = left + ac
+        if r >= 0 and r <= rain_bot and col >= 1 and col <= W then
+          cb[r][col] = rand_glyph()
+          hb[r][col] = "NeotomGlitchR"
         end
       end
     end
+  end
 
-    -- overlay content text onto rain
+  -- content overlay + emit rows
+  local lines = state.lines
+  if not lines then lines = {}; state.lines = lines end
+  state.seg_n = 0
+  for r = 0, H - 1 do
+    local rc, rh = cb[r], hb[r]
     local ov = ov_rows[r]
     if ov then
       local text = ov.text
       local tlen = math.min(#text, W)
-      for ci = 1, tlen do hls[ci] = false end
-      for _, sp in ipairs(ov.spans) do
-        local c0, c1, hl = sp[1], sp[2], sp[3]
-        for ci = c0 + 1, math.min(c1, W) do hls[ci] = hl end
+      for ci = 1, tlen do
+        rc[ci] = text:sub(ci, ci)
+        rh[ci] = false
       end
-      for ci = 1, tlen do chars[ci] = text:sub(ci, ci) end
+      for _, sp in ipairs(ov.spans) do
+        local hi = math.min(sp[2], W)
+        local hl = sp[3]
+        for ci = sp[1] + 1, hi do rh[ci] = hl end
+      end
+      -- little red glitch flicker on titles/footer
+      if ov.anim and tlen > 0 and math.random() < 0.12 then
+        local ci = math.random(1, tlen)
+        rc[ci] = rand_glyph()
+        rh[ci] = "NeotomGlitchR"
+      end
     end
-
-    lines[r + 1] = emit_row(segs, r, chars, hls, W)
+    lines[r + 1] = emit_row(state, r, rc, rh, W)
   end
+  for i = H + 1, #lines do lines[i] = nil end
 
-  state.actions = actions
-  return lines, segs
+  return lines
 end
 
 -- ----------------------------------------------------------------------------
@@ -424,13 +534,15 @@ function M.stop()
   end
 end
 
-local function draw(buf, lines, segs)
+local function draw(buf, lines, state)
   if not api.nvim_buf_is_valid(buf) then return end
   vim.bo[buf].modifiable = true
   api.nvim_buf_set_lines(buf, 0, -1, false, lines)
   vim.bo[buf].modifiable = false
   api.nvim_buf_clear_namespace(buf, ns, 0, -1)
-  for _, s in ipairs(segs) do
+  local segs = state.segs
+  for i = 1, state.seg_n do
+    local s = segs[i]
     pcall(api.nvim_buf_set_extmark, buf, ns, s[1], s[2], {
       end_col = s[3],
       hl_group = s[4],
@@ -452,8 +564,8 @@ local function tick(state)
   local W = api.nvim_win_get_width(win)
   local H = api.nvim_win_get_height(win)
   state.frame = state.frame + 1
-  local lines, segs = build_frame(state, W, H)
-  draw(buf, lines, segs)
+  local lines = build_frame(state, W, H)
+  draw(buf, lines, state)
   if not state.cursor_set then
     -- place cursor on first MRU entry if present
     local first
@@ -464,6 +576,14 @@ local function tick(state)
       pcall(api.nvim_win_set_cursor, win, { first + 1, 0 })
     end
     state.cursor_set = true
+  end
+  -- once the wordmark is fully revealed, slow the timer to cut idle CPU
+  if state.done and not state.throttled then
+    state.throttled = true
+    if M.timer then
+      M.timer:stop()
+      M.timer:start(0, IDLE_FPS_MS, vim.schedule_wrap(function() tick(state) end))
+    end
   end
 end
 
@@ -495,27 +615,38 @@ end
 
 function M.open()
   M.stop()
-  local cfg = vim.fn.stdpath("config")
-  local head = vim.fn.systemlist({ "git", "-C", cfg, "rev-parse", "--short", "HEAD" })[1] or "?"
   local v = vim.version()
   local ok_dev, devicons = pcall(require, "nvim-web-devicons")
 
   local state = {
     frame = 0,
-    phase = "typing",
-    reveal = 0,
+    done = false,
+    throttled = false,
+    exposed = {},
+    exposed_count = 0,
+    total_glyphs = 0,
+    fresh = {},
     W = nil,
     H = nil,
     drops = {},
+    chars_buf = nil,
+    hls_buf = nil,
+    lines = nil,
+    segs = {},
+    seg_n = 0,
+    ov_version = 0,
+    ov_cache_key = nil,
+    ov_rows = nil,
+    ov_actions = nil,
     mru = get_mru(),
-    worktrees = get_worktrees(),
+    worktrees = nil, -- async; renders "scanning..." until loaded
     prs = {},
     pr_status = "loading",
     actions = {},
     cursor_set = false,
     devicons = ok_dev and devicons or nil,
     footer1 = ("nvim %d.%d.%d"):format(v.major, v.minor, v.patch),
-    footer2 = "neotom " .. head,
+    footer2 = "neotom", -- async rev-parse fills in the short hash
   }
   M.state = state
 
@@ -545,6 +676,8 @@ function M.open()
   vim.wo[win].fillchars = "eob: "
 
   set_keymaps(buf, state)
+  fetch_worktrees(state)
+  fetch_head(state)
   fetch_prs(state)
 
   api.nvim_create_autocmd({ "BufLeave", "BufWipeout" }, {
