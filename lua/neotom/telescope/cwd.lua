@@ -159,10 +159,10 @@ M.oldfiles_clean = function()
 end
 
 M.setup = function()
-  vim.keymap.set("n", '<leader>c', function() M.find_files_with_toggle() end,
-    { desc = 'Find Files (toggle raiz/buffer com Alt+D)' })
-  vim.keymap.set("n", '<leader>C', function() M.custom_grep_with_toggle() end,
-    { desc = 'Find Files (toggle raiz/buffer com Alt+D)' })
+  vim.keymap.set("n", '<leader>E', function() M.find_files_with_toggle() end,
+    { desc = 'Find Files (toggle cwd/buffer)' })
+  vim.keymap.set("n", '<leader>G', function() M.custom_grep_with_toggle() end,
+    { desc = 'Grep (toggle cwd/buffer)' })
 end
 
 return M

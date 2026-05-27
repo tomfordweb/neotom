@@ -11,11 +11,14 @@ local ns = api.nvim_create_namespace("neotom_start")
 local function open_url(url)
   if not url or url == "" then return end
   vim.fn.setreg("+", url)
-  local encoded = vim.base64.encode(url)
-  local tty = io.open("/dev/tty", "w")
-  if tty then
-    tty:write(string.format("\27]52;c;%s\7", encoded))
-    tty:close()
+  if os.getenv("TMUX") then
+    vim.fn.system({ "tmux", "load-buffer", "-w", "-" }, url)
+  elseif os.getenv("WAYLAND_DISPLAY") and vim.fn.executable("wl-copy") == 1 then
+    vim.fn.system({ "wl-copy", url })
+  else
+    local encoded = vim.base64.encode(url)
+    local tty = io.open("/dev/tty", "w")
+    if tty then tty:write(string.format("\27]52;c;%s\7", encoded)); tty:close() end
   end
   vim.fn.jobstart({ "xdg-open", url }, { detach = true })
   vim.notify("Copied: " .. url, vim.log.levels.INFO)

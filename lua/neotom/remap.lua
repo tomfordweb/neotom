@@ -44,13 +44,17 @@ keymap("i", "jk", "<ESC>", opts)
 --  ;;  to go to end of the line.
 keymap("i", ";;", "<C-o>$", opts)
 
+-- Preserve cursor position after yank, but skip trick when yanking to named register
+-- so "ay correctly targets register a instead of being clobbered by the mark sequence
+keymap('x', 'y', function()
+  return vim.v.register == '"' and 'myy`y' or 'y'
+end, { expr = true, silent = true, noremap = true })
+
 -- Visual --
 -- Stay in indent mode
 keymap("v", "<", "<gv", opts)
 keymap("v", ">", ">gv", opts)
 
--- maintain cursor position when yanking selections
-keymap('x', 'y', 'myy`y', { silent = true, noremap = true })
 
 keymap("n", "<leader>e", "<CMD>Oil<CR>", { desc = "Open parent directory" })
 keymap("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })

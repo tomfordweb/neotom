@@ -4,6 +4,7 @@ return {
   dependencies = {
     'nvim-lua/plenary.nvim',
     { 'nvim-telescope/telescope-fzf-native.nvim', build = 'make' },
+    { 'nvim-telescope/telescope-ui-select.nvim' },
     -- {
     --   dir = vim.fn.expand("$HOME") .. "/code/tomfordweb/telescope-gitlab",
     -- },
@@ -62,10 +63,16 @@ return {
             ["<C-d>"] = actions.delete_buffer + actions.move_to_top
           },
         },
-      }
+      },
+      extensions = {
+        ["ui-select"] = {
+          require("telescope.themes").get_dropdown(),
+        },
+      },
     }
 
-    require('telescope').load_extension('fzf');
+    require('telescope').load_extension('fzf')
+    require('telescope').load_extension('ui-select')
     require("neotom.telescope.multigrep").setup()
     require("neotom.telescope.cwd").setup()
     require("neotom.telescope.gitlab_mrs").setup()

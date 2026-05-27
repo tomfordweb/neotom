@@ -57,6 +57,41 @@ autocmd('LspAttach', {
     end, { buffer = e.buf, desc = "Code action" })
     vim.keymap.set("n", "gr", function() vim.lsp.buf.references() end, { buffer = e.buf, desc = "Go to references" })
     vim.keymap.set("n", "<leader>cr", function() vim.lsp.buf.rename() end, { buffer = e.buf, desc = "Rename" })
+    if vim.bo[e.buf].filetype == "typescript" or vim.bo[e.buf].filetype == "typescriptreact" then
+      vim.keymap.set("n", "<leader>ci", function()
+        vim.lsp.buf.code_action({
+          apply = true,
+          context = {
+            only = { "source.addMissingImports.ts" },
+            diagnostics = {},
+          },
+        })
+      end, { buffer = e.buf, desc = "TS: add missing imports" })
+      vim.keymap.set("n", "<leader>cc", function()
+        local actions = { "source.fixAll.ts", "source.fixAll.eslint", "source.organizeImports.ts" }
+        local idx = 1
+        local function run_next()
+          if idx > #actions then
+            require("conform").format({ async = true })
+            return
+          end
+          local action = actions[idx]
+          idx = idx + 1
+          vim.lsp.buf.code_action({
+            apply = true,
+            context = { only = { action }, diagnostics = {} },
+          })
+          vim.defer_fn(run_next, 300)
+        end
+        run_next()
+      end, { buffer = e.buf, desc = "TS: fix all + organize imports + format" })
+      vim.keymap.set("n", "<leader>ce", function()
+        vim.lsp.buf.code_action({
+          apply = true,
+          context = { only = { "source.fixAll.eslint" }, diagnostics = {} },
+        })
+      end, { buffer = e.buf, desc = "ESLint: fix all auto-fixable" })
+    end
     vim.keymap.set("n", "]d", function() vim.diagnostic.jump({ count = 1, float = true }) end,
       { buffer = e.buf, desc = "Next diagnostic" })
     vim.keymap.set("n", "[d", function() vim.diagnostic.jump({ count = -1, float = true }) end,

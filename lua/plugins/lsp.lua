@@ -19,11 +19,28 @@ return {
             markdown = { "prettierd" },
             htmlangular = { "prettierd" },
             graphql = { "prettierd" },
-            python = { "black" }
+            python = { "black" },
+            php = { "php_cs_fixer" },
+            phtml = { "php_cs_fixer" },
+          },
+          formatters = {
+            php_cs_fixer = {
+              args = function(self, ctx)
+                local config = ctx.cwd .. "/.php-cs-fixer.dist.php"
+                if vim.fn.filereadable(config) == 0 then
+                  config = ctx.cwd .. "/.php-cs-fixer.php"
+                end
+                local args = { "fix", "--no-interaction", "--quiet" }
+                if vim.fn.filereadable(config) == 1 then
+                  vim.list_extend(args, { "--config", config })
+                end
+                vim.list_extend(args, { "$FILENAME" })
+                return args
+              end,
+            },
           },
           format_on_save = {
-            -- These options will be passed to conform.format()
-            timeout_ms = 200,
+            timeout_ms = 3000,
             lsp_format = "fallback",
           },
         })
@@ -177,6 +194,56 @@ return {
               }
             }
           }
+        end,
+        ["intelephense"] = function()
+          require("lspconfig").intelephense.setup({
+            capabilities = capabilities,
+            settings = {
+              intelephense = {
+                environment = {
+                  -- set to match your Docker PHP version (7.4, 8.0, 8.1, etc.)
+                  phpVersion = "8.0",
+                },
+                files = {
+                  -- default is 1MB — Symfony vendor files routinely exceed this, causing silent indexing failures
+                  maxSize = 5000000,
+                  associations = { "*.php", "*.phtml" },
+                  exclude = {
+                    "**/.git/**",
+                    "**/.svn/**",
+                    "**/node_modules/**",
+                    "**/.DS_Store/**",
+                    -- skip test dirs inside vendor but keep vendor itself indexed
+                    "**/vendor/**/{Tests,tests,test,spec}/**",
+                  },
+                },
+                completion = {
+                  insertUseDeclaration = true,
+                  fullyQualifyGlobalConstantsAndFunctions = false,
+                  triggerParameterHints = true,
+                  maxItems = 100,
+                },
+                stubs = {
+                  "apache", "bcmath", "bz2", "calendar", "Core", "ctype",
+                  "curl", "date", "dom", "exif", "fileinfo", "filter", "fpm",
+                  "ftp", "gd", "hash", "iconv", "intl", "json", "ldap",
+                  "libxml", "mbstring", "meta", "mysqli", "openssl", "pcntl",
+                  "pcre", "PDO", "pdo_mysql", "pdo_pgsql", "pdo_sqlite", "pgsql",
+                  "Phar", "posix", "readline", "Reflection", "session",
+                  "SimpleXML", "soap", "sockets", "sodium", "SPL", "sqlite3",
+                  "standard", "superglobals", "tokenizer", "xml", "xmlreader",
+                  "xmlwriter", "xsl", "zip", "zlib",
+                },
+                diagnostics = {
+                  enable = true,
+                },
+                format = {
+                  enable = true,
+                  braces = "psr2",
+                },
+              },
+            },
+          })
         end,
       }
     })
