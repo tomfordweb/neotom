@@ -1,6 +1,21 @@
 local opt = vim.opt
 
 opt.backup = false                          -- creates a backup file
+if os.getenv("TMUX") ~= nil then
+  vim.g.clipboard = {
+    name  = 'tmux',
+    copy  = { ['+'] = { 'tmux', 'load-buffer', '-' }, ['*'] = { 'tmux', 'load-buffer', '-' } },
+    paste = { ['+'] = { 'tmux', 'save-buffer', '-' }, ['*'] = { 'tmux', 'save-buffer', '-' } },
+    cache_enabled = 1,
+  }
+elseif os.getenv("WAYLAND_DISPLAY") ~= nil then
+  vim.g.clipboard = {
+    name  = 'wl-clipboard',
+    copy  = { ['+'] = 'wl-copy',                    ['*'] = 'wl-copy --primary' },
+    paste = { ['+'] = 'wl-paste --no-newline',       ['*'] = 'wl-paste --no-newline --primary' },
+    cache_enabled = 0,
+  }
+end
 opt.clipboard = "unnamedplus"               -- allows neovim to access the system clipboard
 opt.cmdheight = 1                           -- more space in the neovim command line for displaying messages
 opt.completeopt = { "menuone", "noselect" } -- mostly just for cmp

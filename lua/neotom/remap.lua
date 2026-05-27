@@ -50,7 +50,7 @@ keymap("v", "<", "<gv", opts)
 keymap("v", ">", ">gv", opts)
 
 -- maintain cursor position when yanking selections
-keymap('v', 'y', 'myy`y', opts)
+keymap('x', 'y', 'myy`y', { silent = true, noremap = true })
 
 keymap("n", "<leader>e", "<CMD>Oil<CR>", { desc = "Open parent directory" })
 keymap("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
