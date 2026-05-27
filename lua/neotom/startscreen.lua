@@ -616,14 +616,28 @@ local function set_keymaps(buf, state)
     end)
   end
   map("r", function() fetch_prs(state) end)
-  map("q", function()
-    M.stop()
-    vim.cmd("qa")
-  end)
-  map("<Esc>", function()
-    M.stop()
-    vim.cmd("enew")
-  end)
+  local function close_or_quit()
+    local alt = vim.fn.bufnr('#')
+    local real_buf
+    for _, b in ipairs(api.nvim_list_bufs()) do
+      if b ~= buf and vim.bo[b].buflisted and vim.bo[b].buftype == "" then
+        real_buf = b
+        break
+      end
+    end
+    if real_buf then
+      if alt > 0 and alt ~= buf and vim.bo[alt].buflisted and vim.bo[alt].buftype == "" then
+        vim.cmd("b#")
+      else
+        vim.cmd("b" .. real_buf)
+      end
+    else
+      M.stop()
+      vim.cmd("qa")
+    end
+  end
+  map("q", close_or_quit)
+  map("<Esc>", close_or_quit)
 end
 
 function M.open()
@@ -667,7 +681,13 @@ function M.open()
   state.buf = buf
   state.open_file = function(f)
     M.stop()
+    local start_buf = buf
     vim.cmd("edit " .. vim.fn.fnameescape(f))
+    vim.schedule(function()
+      if api.nvim_buf_is_valid(start_buf) then
+        pcall(vim.cmd, "bwipeout! " .. start_buf)
+      end
+    end)
   end
 
   vim.bo[buf].buftype = "nofile"
@@ -675,7 +695,14 @@ function M.open()
   vim.bo[buf].swapfile = false
   vim.bo[buf].modifiable = false
 
+  local prev_buf = api.nvim_win_get_buf(0)
   api.nvim_win_set_buf(0, buf)
+  -- wipe the initial empty [No Name] buffer so it doesn't surface later
+  if api.nvim_buf_get_name(prev_buf) == ""
+      and api.nvim_buf_line_count(prev_buf) <= 1
+      and api.nvim_buf_get_lines(prev_buf, 0, 1, false)[1] == "" then
+    pcall(api.nvim_buf_delete, prev_buf, { force = true })
+  end
   vim.bo[buf].filetype = "neotomstart"
 
   set_keymaps(buf, state)
@@ -683,10 +710,17 @@ function M.open()
   fetch_head(state)
   fetch_prs(state)
 
-  api.nvim_create_autocmd({ "BufLeave", "BufWipeout" }, {
+  api.nvim_create_autocmd("BufHidden", {
     buffer = buf,
     once = true,
-    callback = function() M.stop() end,
+    callback = function()
+      M.stop()
+      vim.schedule(function()
+        if api.nvim_buf_is_valid(buf) then
+          pcall(vim.cmd, "bwipeout! " .. buf)
+        end
+      end)
+    end,
   })
 
   M.timer = uv.new_timer()
