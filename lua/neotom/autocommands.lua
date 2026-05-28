@@ -99,13 +99,20 @@ autocmd('LspAttach', {
   end
 })
 
--- JS word nav
+-- JS word nav: $ and @ are word chars; - is not (no kebab identifiers in JS/TS)
 autocmd("FileType", {
   pattern = { "javascript", "typescript", "javascriptreact", "typescriptreact", "htmlangular" },
   callback = function()
     vim.opt_local.iskeyword:append({ '$', '@' })
-    -- treat a dash as a word
     vim.opt_local.iskeyword:remove({ '-' })
+  end,
+})
+
+-- CSS/SCSS/HTML need - as word char for kebab identifiers (background-color, data-foo)
+autocmd("FileType", {
+  pattern = { "css", "scss", "html" },
+  callback = function()
+    vim.opt_local.iskeyword:append({ '-' })
   end,
 })
 
