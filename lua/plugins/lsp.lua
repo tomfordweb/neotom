@@ -26,9 +26,11 @@ return {
           formatters = {
             php_cs_fixer = {
               args = function(self, ctx)
-                local config = ctx.cwd .. "/.php-cs-fixer.dist.php"
+                local root = vim.fs.root(ctx.buf, { "composer.json", ".php-cs-fixer.dist.php", ".php-cs-fixer.php" })
+                  or ctx.dirname
+                local config = root .. "/.php-cs-fixer.dist.php"
                 if vim.fn.filereadable(config) == 0 then
-                  config = ctx.cwd .. "/.php-cs-fixer.php"
+                  config = root .. "/.php-cs-fixer.php"
                 end
                 local args = { "fix", "--no-interaction", "--quiet" }
                 if vim.fn.filereadable(config) == 1 then
@@ -222,6 +224,7 @@ return {
                   fullyQualifyGlobalConstantsAndFunctions = false,
                   triggerParameterHints = true,
                   maxItems = 100,
+                  propertyCase = "camel",
                 },
                 stubs = {
                   "apache", "bcmath", "bz2", "calendar", "Core", "ctype",
