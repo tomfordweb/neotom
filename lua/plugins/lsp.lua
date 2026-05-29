@@ -41,6 +41,7 @@ return {
               end,
             },
           },
+          notify_on_error = true,
           format_on_save = {
             timeout_ms = 3000,
             lsp_format = "fallback",
@@ -125,7 +126,11 @@ return {
     })
     require("fidget").setup({
       notification = {
-        override_vim_notify = true
+        override_vim_notify = true,
+        filter_notices = function(msg, level)
+          if vim.fn.mode() == "i" then return false end
+          return true
+        end,
       }
     })
     require("mason").setup()

@@ -60,6 +60,9 @@ keymap("n", "<leader>e", "<CMD>Oil<CR>", { desc = "Open parent directory" })
 keymap("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
 --keymap("n", "<leader>E", require('oil').toggle_float() { desc = "Open parent directory" })
 
+keymap("n", "<leader>F", function() require("conform").format({ async = true, lsp_format = "fallback" }) end,
+  { desc = "Format buffer" })
+
 keymap("n", "<Leader>rr", ":source $MYVIMRC<CR>", { desc = "Reload Neovim config" })
 
 keymap("n", "<leader>tg", "<cmd>:LazyGit<CR>", { noremap = true, silent = true, desc = "Open LazyGit" })
