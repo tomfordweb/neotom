@@ -26,8 +26,12 @@ return {
           formatters = {
             php_cs_fixer = {
               args = function(self, ctx)
-                local root = vim.fs.root(ctx.buf, { "composer.json", ".php-cs-fixer.dist.php", ".php-cs-fixer.php" })
-                    or ctx.dirname
+                -- get root from vim cwd, then buffer cwd, then cwd
+                -- i used submodules a lot so its preferred to have a root one
+                local root = vim.fs.root(vim.fn.getcwd(),
+                      { "composer.json", ".php-cs-fixer.dist.php", ".php-cs-fixer.php" })
+                    or vim.fs.root(ctx.buf, { "composer.json", ".php-cs-fixer.dist.php", ".php-cs-fixer.php" })
+                    or vim.fn.getcwd()
                 local config = root .. "/.php-cs-fixer.dist.php"
                 if vim.fn.filereadable(config) == 0 then
                   config = root .. "/.php-cs-fixer.php"
@@ -35,14 +39,14 @@ return {
                 if vim.fn.filereadable(config) == 1 then
                   return { "fix", "--no-interaction", "--quiet", "--config", config, "$FILENAME" }
                 end
-                -- no project config — pass rules directly (Docker wrapper needs no extra mounts)
+                -- -- no project config — pass rules directly (Docker wrapper needs no extra mounts)
                 return {
                   "fix", "--no-interaction", "--quiet",
                   "--rules", table.concat({
                   '{"@PSR12":true',
                   '"array_syntax":{"syntax":"short"}',
                   '"array_indentation":true',
-                  '"trailing_comma_in_multiline":{"elements":["arrays","arguments","parameters"]}',
+                  '"trailing_comma_in_multiline":{"elements":["arrays","arguments"]}',
                   '"no_whitespace_before_comma_in_array":true',
                   '"trim_array_spaces":true',
                   '"single_quote":true',
