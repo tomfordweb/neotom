@@ -47,6 +47,9 @@ autocmd('LspAttach', {
   callback = function(e)
     vim.keymap.set("n", "gd", function() vim.lsp.buf.definition() end, { buffer = e.buf, desc = "Go to definition" })
     vim.keymap.set("n", "K", function() vim.lsp.buf.hover() end, { buffer = e.buf, desc = "Hover documentation" })
+    vim.keymap.set("n", "<leader>cp", function()
+      vim.cmd(':!prettier --write %')
+    end, { buffer = e.buf, silent = true, desc = "Legacy prettier format" })
     vim.keymap.set("n", "<leader>ca", function()
       -- honestly it would be cool to merge these but idk how.
       if (vim.bo.filetype == "typescript" or vim.bo.filetype == "typescriptreact") then
