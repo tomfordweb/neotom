@@ -20,39 +20,39 @@ return {
             htmlangular = { "prettierd" },
             graphql = { "prettierd" },
             python = { "black" },
-            php = { "prettierd" },
-            phtml = { "prettierd" },
+            php = { "php_cs_fixer" },
+            phtml = { "php_cs_fixer" },
           },
-          -- formatters = {
-          --   php_cs_fixer = {
-          --     args = function(self, ctx)
-          --       local root = vim.fs.root(ctx.buf, { "composer.json", ".php-cs-fixer.dist.php", ".php-cs-fixer.php" })
-          --         or ctx.dirname
-          --       local config = root .. "/.php-cs-fixer.dist.php"
-          --       if vim.fn.filereadable(config) == 0 then
-          --         config = root .. "/.php-cs-fixer.php"
-          --       end
-          --       if vim.fn.filereadable(config) == 1 then
-          --         return { "fix", "--no-interaction", "--quiet", "--config", config, "$FILENAME" }
-          --       end
-          --       -- no project config — pass rules directly (Docker wrapper needs no extra mounts)
-          --       return {
-          --         "fix", "--no-interaction", "--quiet",
-          --         "--rules", table.concat({
-          --           '{"@PSR12":true',
-          --           '"array_syntax":{"syntax":"short"}',
-          --           '"array_indentation":true',
-          --           '"trailing_comma_in_multiline":{"elements":["arrays","arguments","parameters"]}',
-          --           '"no_whitespace_before_comma_in_array":true',
-          --           '"trim_array_spaces":true',
-          --           '"single_quote":true',
-          --           '"binary_operator_spaces":{"default":"single_space"}}',
-          --         }, ","),
-          --         "$FILENAME",
-          --       }
-          --     end,
-          --   },
-          -- },
+          formatters = {
+            php_cs_fixer = {
+              args = function(self, ctx)
+                local root = vim.fs.root(ctx.buf, { "composer.json", ".php-cs-fixer.dist.php", ".php-cs-fixer.php" })
+                    or ctx.dirname
+                local config = root .. "/.php-cs-fixer.dist.php"
+                if vim.fn.filereadable(config) == 0 then
+                  config = root .. "/.php-cs-fixer.php"
+                end
+                if vim.fn.filereadable(config) == 1 then
+                  return { "fix", "--no-interaction", "--quiet", "--config", config, "$FILENAME" }
+                end
+                -- no project config — pass rules directly (Docker wrapper needs no extra mounts)
+                return {
+                  "fix", "--no-interaction", "--quiet",
+                  "--rules", table.concat({
+                  '{"@PSR12":true',
+                  '"array_syntax":{"syntax":"short"}',
+                  '"array_indentation":true',
+                  '"trailing_comma_in_multiline":{"elements":["arrays","arguments","parameters"]}',
+                  '"no_whitespace_before_comma_in_array":true',
+                  '"trim_array_spaces":true',
+                  '"single_quote":true',
+                  '"binary_operator_spaces":{"default":"single_space"}}',
+                }, ","),
+                  "$FILENAME",
+                }
+              end,
+            },
+          },
           notify_on_error = true,
           format_on_save = {
             timeout_ms = 3000,
