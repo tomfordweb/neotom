@@ -102,6 +102,12 @@ vim.keymap.set('n', '<leader>f', function() builtin.find_files(require('telescop
 
 keymap("n", "<leader>rb", function() vim.cmd('source %') end, { desc = "Source File" })
 
+keymap('n', 'm', function()
+  local char = vim.fn.nr2char(vim.fn.getchar())
+  vim.cmd('normal! m' .. char)
+  vim.notify('mark: ' .. char, vim.log.levels.INFO, { title = 'Mark', timeout = 1500 })
+end, { noremap = true, silent = true, desc = 'Set mark with notification' })
+
 keymap('n', '<leader>N', function()
   builtin.find_files {
     cwd = vim.fn.stdpath('config')
