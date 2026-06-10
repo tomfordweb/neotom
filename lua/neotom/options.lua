@@ -24,7 +24,7 @@ opt.fileencoding = "utf-8"                  -- the encoding written to a file
 opt.hlsearch = true                         -- highlight all matches on previous search pattern
 opt.ignorecase = true                       -- ignore case in search patterns
 
-vim.opt.mouse = ""                          -- using a mouse makes you a 5x dev, be a 10x
+vim.opt.mouse = "nvi"                       -- wheel scroll + click positioning (nvim default)
 opt.pumheight = 10                          -- pop up menu height
 opt.showmode = false                        -- we don't need to see things like -- INSERT -- anymore
 opt.showtabline = 0                         -- always show tabs
