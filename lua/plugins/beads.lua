@@ -6,7 +6,7 @@ return {
     "nvim-lua/plenary.nvim",
   },
   config = function()
-    require("beads").setup({ keymaps = true })
+    require("beads").setup({ keymaps = { base = "<leader>B" } })
     require("telescope").load_extension("beads")
   end,
 }
