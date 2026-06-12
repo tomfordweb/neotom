@@ -2,6 +2,10 @@
 
 Personal Neovim configuration. Uses native LSP and `lazy.nvim` for plugin management.
 
+![neotom — animated start screen + MRU jump, Telescope filtering, nvim-cmp completion, LSP hover/references/code-actions/rename, and the Oil file browser](assets/demo.gif)
+
+> Re-record the demo with [`recording/record.sh`](recording/README.md).
+
 ## Architecture
 
 | Area | Path |
