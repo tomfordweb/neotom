@@ -9,7 +9,7 @@ A personal Neovim configuration built around `lazy.nvim` for plugin management. 
 ## Plugin Management
 
 - **Install/update plugins:** `:Lazy` inside Neovim
-- **Install/update LSP servers and formatters:** `:Mason` inside Neovim
+- **LSP servers and formatters come from nix** (`nixos/home/neovim.nix` in the dotfiles repo) — they ship on nvim's PATH via `programs.neovim.extraPackages`. `:Mason` remains as an escape hatch for one-off servers on non-nix machines.
 - The `lazy-lock.json` lockfile pins plugin commits — commit changes to this file when intentionally upgrading plugins.
 
 ## Docker Environment
@@ -49,7 +49,7 @@ The `dependencies.sh` script installs `prettierd` for formatting.
 
 ## LSP & Formatters
 
-Language servers managed via Mason: `ts_ls`, `angularls`, `intelephense`, `pyright`, `lua_ls`, `bashls`, `jsonls`, `dockerls`, `graphql`, `eslint`, `oxlint`, `emmet_ls`, `ansiblels`, `marksman`, `hyprls`, `gitlab_ci_ls`.
+Language servers are configured directly via lspconfig in `lsp.lua` and expected on PATH (nix provides them; on non-nix machines install via `:Mason` or the system package manager): `ts_ls`, `angularls`, `intelephense`, `pyright`, `pylsp`, `lua_ls`, `bashls`, `jsonls`, `docker_language_server`, `docker_compose_language_service`, `graphql`, `eslint`, `oxlint`, `emmet_ls`, `ansiblels`, `marksman`, `hyprls`, `gitlab_ci_ls`, `nixd`.
 
 Formatters via conform.nvim: `prettierd` (JS/TS/HTML/CSS/JSON/YAML/Markdown/GraphQL), `shfmt` (shell), `black` (Python).
 
