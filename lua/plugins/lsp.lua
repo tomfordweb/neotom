@@ -63,9 +63,9 @@ return {
       end
     },
 
-    -- management
+    -- management — mason kept as an escape hatch only; servers come
+    -- from nix (nixos/home/neovim.nix), not mason-lspconfig.
     "williamboman/mason.nvim",
-    "mason-org/mason-lspconfig.nvim",
     -- autocompleteion
     "hrsh7th/cmp-nvim-lsp",
     "hrsh7th/cmp-buffer",
@@ -146,77 +146,72 @@ return {
         end,
       }
     })
+    -- Mason stays installed as an escape hatch (:MasonInstall for a
+    -- one-off server), but nothing is auto-downloaded: every server
+    -- below ships on nvim's PATH via nix (nixos/home/neovim.nix).
     require("mason").setup()
 
-    require("mason-lspconfig").setup({
-      ensure_installed = {
-        "angularls",
-        "pyright",
-        "lua_ls",
-        "intelephense",
-        "python-lsp-server",
-        "ansiblels",
-        "bashls",
-        "marksman",
-        "docker_compose_language_service",
-        "hyprls",
-        "docker_language_server",
-        "emmet_ls",
-        "eslint",
-        "oxlint",
-        "gitlab_ci_ls",
-        "graphql",
-        "jsonls",
-        "ts_ls"
+    local lspconfig = require("lspconfig")
+
+    -- Servers that need nothing beyond capabilities.
+    local default_servers = {
+      "angularls",
+      "ansiblels",
+      "marksman",
+      "docker_compose_language_service",
+      "hyprls",
+      "docker_language_server",
+      "emmet_ls",
+      "eslint",
+      "oxlint",
+      "gitlab_ci_ls",
+      "graphql",
+      "jsonls",
+      "ts_ls",
+      "nixd",
+    }
+    for _, server_name in ipairs(default_servers) do
+      lspconfig[server_name].setup {
+        capabilities = capabilities
+      }
+    end
+
+    lspconfig.pylsp.setup({
+      -- Customize pylsp options here if needed
+      settings = {
+        pylsp = {
+          plugins = {
+            -- Enable/disable specific pylsp plugins
+            pyflakes = { enabled = true },
+            autopep8 = { enabled = true },
+            -- ... other plugins
+          },
+        },
       },
-      handlers = {
-        function(server_name) -- default handler (optional)
-          require("lspconfig")[server_name].setup {
-            capabilities = capabilities
-          }
-        end,
-        ["python-lsp-server"] = function()
-          require("lspconfig").pylsp.setup({
-            -- Customize pylsp options here if needed
-            settings = {
-              pylsp = {
-                plugins = {
-                  -- Enable/disable specific pylsp plugins
-                  pyflakes = { enabled = true },
-                  autopep8 = { enabled = true },
-                  -- ... other plugins
-                },
-              },
-            },
-          })
-        end,
-        ["pyright"] = function()
-          require("lspconfig").pyright.setup()
-        end,
-        ["bashls"] = function()
-          require("lspconfig").bashls.setup()
-        end,
-        ["lua_ls"] = function()
-          local lspconfig = require("lspconfig")
-          lspconfig.lua_ls.setup {
-            capabilities = capabilities,
-            settings = {
-              Lua = {
-                format = {
-                  enable = true,
-                  -- Put format options here
-                  -- NOTE: the value should be STRING!!
-                  defaultConfig = {
-                    indent_style = "space",
-                    indent_size = "2",
-                  }
-                },
-              }
+    })
+
+    lspconfig.pyright.setup()
+
+    lspconfig.bashls.setup()
+
+    lspconfig.lua_ls.setup {
+      capabilities = capabilities,
+      settings = {
+        Lua = {
+          format = {
+            enable = true,
+            -- Put format options here
+            -- NOTE: the value should be STRING!!
+            defaultConfig = {
+              indent_style = "space",
+              indent_size = "2",
             }
-          }
-        end,
-        ["intelephense"] = function()
-          require("lspconfig").intelephense.setup({
+          },
+        }
+      }
+    }
+
+    lspconfig.intelephense.setup({
             capabilities = capabilities,
             settings = {
               intelephense = {
@@ -265,9 +260,7 @@ return {
               },
             },
           })
-        end,
-      }
-    })
+
     cmp.setup({
       snippet = {
         expand = function(args)
