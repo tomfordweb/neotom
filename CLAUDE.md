@@ -10,7 +10,7 @@ A personal Neovim configuration built around `lazy.nvim` for plugin management. 
 
 - **Install/update plugins:** `:Lazy` inside Neovim
 - **LSP servers and formatters come from nix** (`nixos/home/neovim.nix` in the dotfiles repo) — they ship on nvim's PATH via `programs.neovim.extraPackages`. `:Mason` remains as an escape hatch for one-off servers on non-nix machines.
-- The `lazy-lock.json` lockfile pins plugin commits — commit changes to this file when intentionally upgrading plugins.
+- `lazy-lock.json` is gitignored on purpose — plugin versions float per machine, so there is nothing to commit after `:Lazy sync`.
 
 ## Docker Environment
 
@@ -38,7 +38,8 @@ The `dependencies.sh` script installs `prettierd` for formatting.
 - `lsp.lua` — Mason, mason-lspconfig, conform.nvim (formatters), nvim-cmp (completion), LuaSnip
 - `telescope.lua` — Telescope with fzf-native and lazygit extensions
 - `treesitter.lua` — Parsers + treesitter-context
-- `theme.lua` — Kanagawa colorscheme ("wave" dark, "lotus" light)
+- `theme.lua` — cyberdream colorscheme, recolored to the desktop rice palette
+  (`rice/palette.json` in the dotfiles repo is the source of truth for those hexes)
 - Other plugins are standalone and self-contained in their file
 
 **`lua/mhvdc/`** — Work module; registers `.class` and `.snip` as PHP filetypes.
