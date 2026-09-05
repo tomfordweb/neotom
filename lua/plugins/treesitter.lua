@@ -15,15 +15,14 @@ return {
     end
 
     -- require('nvim-highlight-colors').setup({});
-    require('nvim-treesitter').setup {
-      ensure_installed = {
-        "php",
-        "json", "angular", "html", "css", "lua", "vim", "vimdoc", "typescript", "javascript", "markdown", "markdown_inline", "yaml"
-      },
-      sync_install = false,
-      auto_install = true,
-      indent = { enable = true },
+    -- main branch: setup() takes no ensure_installed; parsers are installed
+    -- explicitly. install() is a no-op for parsers already present.
+    local parsers = {
+      "php",
+      "json", "angular", "html", "css", "lua", "vim", "vimdoc", "typescript", "javascript", "markdown", "markdown_inline", "yaml"
     }
+    require('nvim-treesitter').setup {}
+    require('nvim-treesitter').install(parsers)
 
     require 'treesitter-context'.setup {
       enable = true,            -- Enable this plugin (Can be enabled/disabled later via commands)
