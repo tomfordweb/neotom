@@ -2,14 +2,14 @@
 # Collect nvim diagnostics (checkhealth, startup errors/timing, LSP attach,
 # nvim logs, tool availability) into text files for debugging a machine.
 #
-#   ./diagnose-nvim            # writes to <this repo>/.diagnose/ (gitignored)
-#   ./diagnose-nvim /some/dir  # writes there instead
+#   bin/diagnose-nvim            # writes to <this repo>/.diagnose/ (gitignored)
+#   bin/diagnose-nvim /some/dir  # writes there instead
 #
 # Open nvim once beforehand so lazy.nvim has installed plugins.
 # Read-only apart from the output dir (lazy.nvim may install missing plugins).
 set -u
 
-REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="$(mkdir -p "${1:-$REPO/.diagnose}" && cd "${1:-$REPO/.diagnose}" && pwd)"
 rm -f "$OUT"/*.txt
 cd "$OUT"

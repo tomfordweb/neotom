@@ -126,13 +126,13 @@ docker run -it neotom nvim
 
 ## Diagnosing a machine
 
-`./diagnose-nvim` writes `:checkhealth`, startup errors/timing, an LSP attach
+`bin/diagnose-nvim` writes `:checkhealth`, startup errors/timing, an LSP attach
 test, nvim's logs, and which language servers/formatters are on PATH into
 `.diagnose/` (gitignored). Open nvim once first so lazy.nvim installs plugins.
 
 ## Upgrading Neovim
 
-Use the `rebuild-nvim` script — handles purging state, checking out the version, compiling a release build, and installing.
+Use the `bin/rebuild-nvim` script — handles purging state, checking out the version, compiling a release build, and installing.
 
 To purge manually without rebuilding:
 

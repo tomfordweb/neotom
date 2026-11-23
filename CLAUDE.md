@@ -21,7 +21,7 @@ docker build --build-arg TAG=nightly -t neotom .
 docker run -it neotom nvim
 ```
 
-The `dependencies.sh` script installs `prettierd` for formatting.
+The `bin/dependencies.sh` script installs `prettierd` for formatting.
 
 ## Architecture
 
