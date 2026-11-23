@@ -63,3 +63,10 @@ opt.wildmode =
 'longest:full,full' -- complete longest common match, allow tabbing results to fully complete them.
 opt.spell = true    -- spellcheccck
 opt.confirm = true  -- ask for confirmation instead of erroring.
+
+-- No remote plugins use the language providers, so skip probing for them
+-- (also silences the vim.provider warnings in :checkhealth).
+vim.g.loaded_python3_provider = 0
+vim.g.loaded_node_provider = 0
+vim.g.loaded_ruby_provider = 0
+vim.g.loaded_perl_provider = 0

@@ -137,21 +137,29 @@ return {
     require("cmp").setup.filetype('markdown', {
       sources = {},
     })
-    require("fidget").setup({
-      notification = {
-        override_vim_notify = true,
-        filter_notices = function(msg, level)
-          if vim.fn.mode() == "i" then return false end
-          return true
-        end,
-      }
-    })
+    -- Route vim.notify through fidget ourselves instead of using its
+    -- override_vim_notify (whose healthcheck errors if vim.notify isn't
+    -- exactly fidget.notify). fidget has no per-message filter option, so
+    -- the "quiet while typing" rule lives here. Errors always get through.
+    local fidget = require("fidget")
+    fidget.setup({})
+    vim.notify = function(msg, level, opts)
+      if vim.fn.mode() == "i" and (level or vim.log.levels.INFO) < vim.log.levels.ERROR then
+        return
+      end
+      return fidget.notify(msg, level, opts)
+    end
     -- Mason stays installed as an escape hatch (:MasonInstall for a
     -- one-off server), but nothing is auto-downloaded: every server
     -- below ships on nvim's PATH via nix (nixos/home/neovim.nix).
     require("mason").setup()
 
-    local lspconfig = require("lspconfig")
+    -- Native Nvim 0.11+ LSP config. nvim-lspconfig now only supplies the
+    -- per-server defaults (its lsp/<name>.lua files); the old
+    -- require("lspconfig")[name].setup() framework is deprecated (removed in
+    -- lspconfig v3) and warned on every startup. vim.lsp.config() merges
+    -- over those defaults; "*" applies to every server.
+    vim.lsp.config("*", { capabilities = capabilities })
 
     -- Servers that need nothing beyond capabilities.
     local default_servers = {
@@ -160,7 +168,6 @@ return {
       "marksman",
       "docker_compose_language_service",
       "hyprls",
-      "docker_language_server",
       "emmet_ls",
       "eslint",
       "oxlint",
@@ -170,13 +177,8 @@ return {
       "ts_ls",
       "nixd",
     }
-    for _, server_name in ipairs(default_servers) do
-      lspconfig[server_name].setup {
-        capabilities = capabilities
-      }
-    end
 
-    lspconfig.pylsp.setup({
+    vim.lsp.config("pylsp", {
       -- Customize pylsp options here if needed
       settings = {
         pylsp = {
@@ -190,11 +192,15 @@ return {
       },
     })
 
-    lspconfig.pyright.setup()
+    -- docker_language_server: Dockerfiles only. Its default compound
+    -- filetypes (yaml.docker-compose, hcl.docker-bake) don't exist in Nvim
+    -- (:checkhealth warns), and compose files are handled by
+    -- docker_compose_language_service above.
+    vim.lsp.config("docker_language_server", {
+      filetypes = { "dockerfile" },
+    })
 
-    lspconfig.bashls.setup()
-
-    lspconfig.lua_ls.setup {
+    vim.lsp.config("lua_ls", {
       capabilities = capabilities,
       settings = {
         Lua = {
@@ -209,9 +215,9 @@ return {
           },
         }
       }
-    }
+    })
 
-    lspconfig.intelephense.setup({
+    vim.lsp.config("intelephense", {
             capabilities = capabilities,
             settings = {
               intelephense = {
@@ -260,6 +266,15 @@ return {
               },
             },
           })
+
+    vim.lsp.enable(vim.list_extend(default_servers, {
+      "pylsp",
+      "pyright",
+      "bashls",
+      "lua_ls",
+      "intelephense",
+      "docker_language_server",
+    }))
 
     cmp.setup({
       snippet = {

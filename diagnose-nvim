@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+# Collect nvim diagnostics (checkhealth, startup errors/timing, LSP attach,
+# nvim logs, tool availability) into text files for debugging a machine.
+#
+#   ./diagnose-nvim            # writes to <this repo>/.diagnose/ (gitignored)
+#   ./diagnose-nvim /some/dir  # writes there instead
+#
+# Open nvim once beforehand so lazy.nvim has installed plugins.
+# Read-only apart from the output dir (lazy.nvim may install missing plugins).
+set -u
+
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+OUT="$(mkdir -p "${1:-$REPO/.diagnose}" && cd "${1:-$REPO/.diagnose}" && pwd)"
+rm -f "$OUT"/*.txt
+cd "$OUT"
+NV=(timeout 120 nvim)
+
+bold() { printf '\033[1m%s\033[0m' "$*"; }
+step() { echo "$(bold "── $* ──")"; }
+
+if ! command -v nvim >/dev/null 2>&1; then
+  echo "nvim not found on PATH" >&2
+  exit 1
+fi
+
+step "environment"
+{
+  echo "date: $(date -Is)   host: $(hostname)   os: $(. /etc/os-release 2>/dev/null && echo "$PRETTY_NAME" || uname -sr)"
+  echo "nvim: $(command -v nvim)"
+  nvim --version | head -3
+  echo
+  echo "~/.config/nvim -> $(readlink -f "$HOME/.config/nvim" 2>/dev/null || echo 'missing')"
+  echo "XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-<unset>}  NVIM_APPNAME=${NVIM_APPNAME:-<unset>}  EDITOR=${EDITOR:-<unset>}"
+  echo "PATH:"; tr ':' '\n' <<<"$PATH" | sed 's/^/  /'
+  echo
+  echo "config repo ($REPO):"
+  git -C "$REPO" log -1 --format='  %h %ci %s' 2>/dev/null
+  git -C "$REPO" status -s 2>/dev/null | sed 's/^/  /'
+  echo
+  # Keep in sync with lsp.lua / the "LSP & Formatters" list in CLAUDE.md.
+  echo "tools on PATH:"
+  for t in git curl unzip tar gcc cc make rg fd fdfind fzf node npm python3 \
+           tree-sitter lazygit xclip wl-copy; do
+    printf '  %-34s %s\n' "$t" "$(command -v "$t" || echo -)"
+  done
+  echo
+  echo "language servers (lspconfig name: binary):"
+  for pair in ts_ls:typescript-language-server angularls:ngserver \
+              intelephense:intelephense pyright:pyright-langserver pylsp:pylsp \
+              lua_ls:lua-language-server bashls:bash-language-server \
+              jsonls:vscode-json-language-server \
+              docker_language_server:docker-language-server \
+              docker_compose_language_service:docker-compose-langserver \
+              graphql:graphql-lsp eslint:vscode-eslint-language-server oxlint:oxc_language_server \
+              emmet_ls:emmet-ls ansiblels:ansible-language-server marksman:marksman \
+              hyprls:hyprls gitlab_ci_ls:gitlab-ci-ls nixd:nixd; do
+    printf '  %-34s %s\n' "${pair%%:*}: ${pair#*:}" "$(command -v "${pair#*:}" || echo -)"
+  done
+  echo
+  echo "formatters:"
+  for t in prettierd shfmt black; do
+    printf '  %-34s %s\n' "$t" "$(command -v "$t" || echo -)"
+  done
+  echo
+  echo "mason-installed (~/.local/share/nvim/mason/bin):"
+  ls "${XDG_DATA_HOME:-$HOME/.local/share}/nvim/mason/bin" 2>/dev/null | sed 's/^/  /' || echo "  (none)"
+} > env.txt 2>&1
+
+step "startup: errors, timing, verbose"
+"${NV[@]}" --headless --startuptime startuptime.txt +qa > startup-stderr.txt 2>&1
+"${NV[@]}" --headless -V2"$OUT/verbose.txt" +qa > /dev/null 2>&1
+"${NV[@]}" --headless -c 'redir! > messages.txt' -c 'silent messages' -c 'redir END' -c 'qa!' > /dev/null 2>&1
+# vim.notify goes to fidget, which shows nothing headless and keeps it out of
+# :messages — so startup errors (e.g. lazy "Failed to run config") only show
+# up in fidget's history.
+"${NV[@]}" --headless -c 'redir! > notifications.txt' -c 'silent! Fidget history' -c 'redir END' -c 'qa!' > /dev/null 2>&1
+
+step ":checkhealth"
+"${NV[@]}" --headless -c 'checkhealth' -c 'w! checkhealth.txt' -c 'qa!' > /dev/null 2>&1
+
+step "LSP attach test on init.lua (waits up to 20s for a client)"
+"${NV[@]}" --headless "$REPO/init.lua" \
+  -c 'lua vim.wait(20000, function() return #vim.lsp.get_clients({ bufnr = 0 }) > 0 end, 200)' \
+  -c 'lua vim.fn.writefile({ "clients attached to init.lua: " .. vim.iter(vim.lsp.get_clients({ bufnr = 0 })):map(function(c) return c.name end):join(", ") }, "lsp-attach.txt")' \
+  -c 'checkhealth vim.lsp' -c 'w! lsp-health.txt' -c 'qa!' > /dev/null 2>&1
+
+step "nvim logs"
+S="${XDG_STATE_HOME:-$HOME/.local/state}/nvim"
+for f in log lsp.log; do
+  [ -f "$S/$f" ] && tail -n 400 "$S/$f" > "nvim-${f%.log}-log.txt"
+done
+
+echo
+ls -la "$OUT"
+echo "Done: $OUT"
